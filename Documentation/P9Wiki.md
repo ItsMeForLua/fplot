@@ -1,0 +1,185 @@
+# Biotech Applications
+
+This page demonstrates how to generate plots commonly used in Biotech.
+
+## 1. Volcano Plot for Gene Expression
+
+Volcano plots are used to visualize differential gene expression results of RNA-Seq and/or microarray experiments. They plot statistical significance (-log10 p-value) against magnitude of change (log2 fold change).
+
+This example shows how to create a volcano plot, highlighting significantly up- and down-regulated genes.
+
+### Fennel
+
+```lua
+(local fplot (require :fplot))
+
+;; --- Mock Data Generation ---
+(math.randomseed 42)
+(local up-regulated [])
+(local down-regulated [])
+(local non-significant [])
+
+(for [_ 1 500]
+  (let [log2fc (- -4 (* (math.random) 4)) ; range [-8, -4]
+        p-value (* (math.random) 1e-6)]
+    (table.insert down-regulated [log2fc (* -1 (math.log10 p-value))])))
+
+(for [_ 1 500]
+  (let [log2fc (+ 4 (* (math.random) 4)) ; range [4, 8]
+        p-value (* (math.random) 1e-6)]
+    (table.insert up-regulated [log2fc (* -1 (math.log10 p-value))])))
+
+(for [_ 1 9000]
+  (let [log2fc (* (- (math.random) 0.5) 8) ; range [-4, 4]
+        p-value (math.random)]
+    (table.insert non-significant [log2fc (* -1 (math.log10 p-value))])))
+
+
+;; --- Plotting ---
+(fplot.plot
+  {:options {:title "Volcano Plot of Differential Gene Expression"
+             :x-label "log2(Fold Change)"
+             :y-label "-log10(p-value)"
+             :grid true
+             :key {:enabled false}}
+   :datasets [{:style "points" :pointtype 7 :color "#cccccc" :data non-significant}
+              {:style "points" :pointtype 7 :color "#ff4136" :data up-regulated}
+              {:style "points" :pointtype 7 :color "#0074d9" :data down-regulated}]})
+```
+
+### Lua
+
+```lua
+require("fennel").install()
+local fplot = require("fplot")
+
+-- --- Mock Data Generation ---
+math.randomseed(42)
+local up_regulated = {}
+local down_regulated = {}
+local non_significant = {}
+
+for _ = 1, 500 do
+    local log2fc = -4 - math.random() * 4
+    local p_value = math.random() * 1e-6
+    table.insert(down_regulated, {log2fc, -math.log10(p_value)})
+end
+
+for _ = 1, 500 do
+    local log2fc = 4 + math.random() * 4
+    local p_value = math.random() * 1e-6
+    table.insert(up_regulated, {log2fc, -math.log10(p_value)})
+end
+
+for _ = 1, 9000 do
+    local log2fc = (math.random() - 0.5) * 8
+    local p_value = math.random()
+    table.insert(non_significant, {log2fc, -math.log10(p_value)})
+end
+
+-- --- Plotting ---
+fplot.plot({
+  options = {
+    title = "Volcano Plot of Differential Gene Expression",
+    x_label = "log2(Fold Change)",
+    y_label = "-log10(p-value)",
+    grid = true,
+    key = {enabled = false}
+  },
+  datasets = {
+    {style = "points", pointtype = 7, color = "#cccccc", data = non_significant},
+    {style = "points", pointtype = 7, color = "#ff4136", data = up_regulated},
+    {style = "points", pointtype = 7, color = "#0074d9", data = down_regulated}
+  }
+})
+```
+
+![f](C:\Users\andre\Downloads\BioVolcanoPlot1.png)
+
+---
+
+## 2. Protein Thermal Melt Curve
+
+A thermal melt curve from a Differential Scanning Fluorimetry (DSF) experiment is used to assess protein stability. This plot shows fluorescence vs. temperature, and the inflection point of the curve is the melting temperature (Tm). This example plots two curves, representing a protein with and without a stabilizing ligand.
+
+### Fennel
+
+```lua
+(local fplot (require :fplot))
+
+;; --- Mock Data Generation ---
+(fn sigmoid [x x0 k]
+  (/ 1 (+ 1 (math.exp (- (* k (- x x0)))))))
+
+(local protein-only [])
+(local with-ligand [])
+(for [temp 25 95 1]
+  (let [base-fluor (* (math.random) 0.1)
+        tm1 55
+        tm2 65]
+    (table.insert protein-only [temp (+ 10 base-fluor (* 80 (sigmoid temp tm1 0.5)))])
+    (table.insert with-ligand [temp (+ 10 base-fluor (* 80 (sigmoid temp tm2 0.5)))])))
+
+;; --- Plotting ---
+(fplot.plot
+  {:options {:title "Protein Thermal Shift Assay"
+             :x-label "Temperature (°C)"
+             :y-label "Relative Fluorescence Units (RFU)"
+             :key {:position "bottom right"}}
+   :datasets [{:title "Apo Protein"
+               :style "lines"
+               :color "black"
+               :data protein-only}
+              {:title "Protein + Ligand"
+               :style "lines"
+               :color "blue"
+               :data with-ligand}]})
+```
+
+### Lua
+
+```lua
+require("fennel").install()
+local fplot = require("fplot")
+
+-- --- Mock Data Generation ---
+local function sigmoid(x, x0, k)
+  return 1 / (1 + math.exp(-k * (x - x0)))
+end
+
+local protein_only = {}
+local with_ligand = {}
+for temp = 25, 95, 1 do
+    local base_fluor = math.random() * 0.1
+    local tm1 = 55
+    local tm2 = 65
+    table.insert(protein_only, {temp, 10 + base_fluor + 80 * sigmoid(temp, tm1, 0.5)})
+    table.insert(with_ligand, {temp, 10 + base_fluor + 80 * sigmoid(temp, tm2, 0.5)})
+end
+
+-- --- Plotting ---
+fplot.plot({
+  options = {
+    title = "Protein Thermal Shift Assay",
+    x_label = "Temperature (°C)",
+    y_label = "Relative Fluorescence Units (RFU)",
+    key = {position = "bottom right"}
+  },
+  datasets = {
+    {
+      title = "Apo Protein",
+      style = "lines",
+      color = "black",
+      data = protein_only
+    },
+    {
+      title = "Protein + Ligand",
+      style = "lines",
+      color = "blue",
+      data = with_ligand
+    }
+  }
+})
+```
+
+![f](C:\Users\andre\Downloads\BioSigmoidPlot2.png)
