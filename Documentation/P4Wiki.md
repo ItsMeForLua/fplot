@@ -55,4 +55,4 @@ Below is a comprehensive list of all available options. Remember that when using
 | `:multiplot`  | table    | A table to configure a multiplot layout.                                   | `:multiplot {:layout [2 2] :title "My Multiplot"}`                 |
 | `:extra-opts` | list     | A list of raw gnuplot commands to be inserted into the script.             | `:extra-opts ["set style data histograms" "set style fill solid"]` |
 
-For options specific to individual datasets (like line color and style), see the **Dataset Configuration** page.
+For options specific to individual datasets (like line color and style), see the [**Dataset Configuration**](P5Wiki.md) page.
