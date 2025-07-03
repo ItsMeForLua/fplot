@@ -28,7 +28,7 @@ This is useful if you have existing Gnuplot scripts or need to set a simple stri
 
 ## Fennel: The Real Macro System
 
-The true power of fplot comes from using Fennel itself to create reusable components. Because Fennel has a true macro system, you can create very powerful abstractions. But for most plotting scenerios, simple functions that just return tables are usually more than enough. This approach is flexible, powerful, and easy to debug.
+The true power of fplot comes from using Fennel itself to create reusable components. Because Fennel has a true macro system, you can create very powerful abstractions. But for most plotting scenerios, simple functions that just return tables are usually more than enough.
 
 ### 1. Reusable Data Generators
 
