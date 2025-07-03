@@ -34,7 +34,7 @@ These options override the default styles for a specific dataset.
 
 A simple list of numbers will be plotted against their indices (1, 2, 3, ...).
 
-```lua
+```fennel
 :data [10 12 15 11 9]
 ```
 
@@ -42,7 +42,7 @@ A simple list of numbers will be plotted against their indices (1, 2, 3, ...).
 
 This is the most common format for 2D plots.
 
-```lua
+```fennel
 :data [[0 10] [1 12] [2 15] [3 11] [4 9]]
 ```
 
@@ -50,7 +50,7 @@ This is the most common format for 2D plots.
 
 If it's more convenient to provide data as columns, fplot will automatically transpose it. This is detected when the number of inner tables (columns) is less than the number of items in the first inner table.
 
-```lua
+```fennel
 ;; This is treated the same as the X-Y pairs above
 :data [[0 1 2 3 4]      ;-- x-values
        [10 12 15 11 9]]  ;-- y-values
@@ -60,7 +60,7 @@ If it's more convenient to provide data as columns, fplot will automatically tra
 
 For surface plots (e.g., with `pm3d`), provide a list of rows, where each row is a list of `[x y z]` points. `fplot` formats this correctly by adding blank lines between rows for gnuplot.
 
-```lua
+```fennel
 :data [;; Row 1
        [[0 0 5] [0 1 6] [0 2 7]]
        ;; Row 2
@@ -73,7 +73,7 @@ For surface plots (e.g., with `pm3d`), provide a list of rows, where each row is
 
 To plot data directly from a file, provide the filename as a string in the `:data` field.
 
-```lua
+```fennel
 :data "path/to/your/data.dat"
 ```
 
