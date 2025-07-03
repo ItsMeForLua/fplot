@@ -18,7 +18,7 @@ Let's start with the simplest possible plot.
 
 ### Fennel
 
-```lua
+```fennel
 (local fplot (require :fplot))
 
 (fplot.plot
@@ -49,7 +49,7 @@ Most of the time, you'll want to specify both X and Y coordinates. You can do th
 
 ### Fennel
 
-```lua
+```fennel
 (local fplot (require :fplot))
 
 (local squared-data [])
@@ -111,7 +111,7 @@ To plot multiple datasets, simply add more tables to the `:datasets` list. Let's
 
 ### Fennel
 
-```lua
+```fennel
 (local fplot (require :fplot))
 
 ;; Generate data
@@ -171,7 +171,7 @@ If you want to save your plot instead of displaying it in a window, use the `:ou
 
 ### Fennel
 
-```lua
+```fennel
 (local fplot (require :fplot))
 
 ;; Generate data
