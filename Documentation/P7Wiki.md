@@ -135,7 +135,6 @@ The real magic happens when you combine these components. You can define a base 
 (print "Plot generated at my-new-composed-plot.png")
 ```
 
----
 
 #### The Lua Equivalent: Reusable Functions
 
@@ -214,3 +213,4 @@ fplot.plot({
 
 print("Plot generated at my-composed-plot.png")
 ```
+---
