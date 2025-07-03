@@ -1,6 +1,7 @@
 # Advanced Features
 
 This page covers some of the more advanced capabilities of `fplot`, such as creating composite plots, adding annotations, and using raw Gnuplot commands.
+> **NOTE:** Fennel Macros are not included in this wiki page, because they have their own dedicated page, [here](P7Wiki.md).
 
 ## Multiplot
 
