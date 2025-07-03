@@ -166,4 +166,4 @@ For more advanced examples, API details, and guides on creating reusable plot co
 
 ## License
 
-Fplot is released under the **MIT License**. See the `LICENSE` file for details.
+Fplot is released under the **LGPL-3.0 License**. See the [LICENSE](LICENSE) file for details.
