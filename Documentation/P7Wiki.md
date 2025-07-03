@@ -16,7 +16,7 @@ Gnuplot has a built-in macro system using the `@` character (e.g., `plot @my_mac
 
 This is useful if you have existing Gnuplot scripts or need to set a simple string substitution.  
 
-```lua
+```fennel
 (fplot.plot
   {:options {:title "Plotting with a Gnuplot Macro"
              :x-range [-5 5]
@@ -34,7 +34,7 @@ The true power of fplot comes from using Fennel itself to create reusable compon
 
 You can write functions that generate complex datasets.
 
-```lua
+```fennel
 ;; A function for generating sinc data
 (fn generate-sinc-data [steps]
   (let [data []
@@ -60,7 +60,7 @@ You can write functions that generate complex datasets.
 
 Create functions that return tables with your preferred plot options. This allows you to maintain a consistent style across many different plots.
 
-```lua
+```fennel
 ;; A function for a publication-quality plot style
 (fn publication-style [title]
   {:title title
@@ -80,7 +80,7 @@ The real magic happens when you combine these components. You can define a base 
 
 #### Fennel
 
-```lua
+```fennel
 (local fplot (require :fplot))
 
 ;; Helper function to recursively clone a table.
