@@ -55,7 +55,7 @@ You can verify that `fplot` is installed correctly by running the following code
 
 Create a file `test.fnl`:
 
-```lua
+```fennel
 (local fplot (require :fplot))
 (print "fplot loaded successfully!")
 
