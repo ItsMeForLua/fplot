@@ -118,7 +118,7 @@ If you suspect this is the issue, you can force `fplot` to use a different termi
 
 **Example (forcing the `qt` terminal):**
 
-```lua
+```fennel
 (fplot.plot
   {:options {:title "My Plot"
              :output-type "qt"} ; <-- Force the qt terminal
