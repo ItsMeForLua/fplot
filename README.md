@@ -170,7 +170,7 @@ Now you can `require("fplot")` from your Lua code like any other Lua module, wit
 
 ## Further Documentation
 
-For more advanced examples, API details, and guides on creating reusable plot components, please see the [**fplot Wiki**](https://www.google.com/search?q=https://github.com/your-username/fplot/wiki "null").
+For more advanced examples, API details, and guides on creating reusable plot components, please see the [**fplot Wiki**](https://github.com/ItsMeForLua/fplot/wiki).
 
 ## License
 
