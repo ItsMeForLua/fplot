@@ -347,13 +347,16 @@
 
     (assert (and main-opts.multiplot) "Multiplot options must be in the last table argument.")
 
-    ;; 1. Add ONLY global setup commands from the main config
+    ;; 1. Add ONLY global setup commands from the main config, excluding multiplot.
     (let [main-setup-cmds (filter-non-nil (icollect [k v (pairs main-opts)]
-                                            (when (is-global-key k)
+                                            (when (and (is-global-key k) (not= k :multiplot))
                                               (option->cmd k v main-opts))))]
       (table.insert script-parts (safe-concat main-setup-cmds "")))
 
-    ;; 2. Loop through each subplot configuration
+    ;; 2. NOW add the multiplot command to ensure it comes after term and output.
+    (table.insert script-parts (option->cmd :multiplot main-opts.multiplot main-opts))
+
+    ;; 3. Loop through each subplot configuration
     (for [i 1 (- num-configs 1)]
       (let [plot-config (. configs i)
             opts (merge-tables default-options (or (. plot-config :options) {}))
@@ -363,7 +366,7 @@
         (each [_ f (ipairs data-files)] (table.insert all-temp-files f))
         (table.insert script-parts (build-plot-command kind opts processed-datasets))))
 
-    ;; 3. Add unset multiplot and finalize
+    ;; 4. Add unset multiplot and finalize
     (table.insert script-parts "unset multiplot\n")
     (let [script-content (table.concat script-parts "")
           script-filename (execute-script script-content gnuplot-executable main-opts)]
