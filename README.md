@@ -43,8 +43,16 @@ gnuplot --version
 ```
 
 ## Installation & Setup (Using Fennel)
+To install **fplot** using LuaRocks, simply run:
 
-The easiest way to use fplot is to drop `fplot.fnl` and the `fennel.lua` compiler directly into your project directory. This allows you to write your plotting scripts in Fennel, which is the most natural way to use the library.
+```bash
+luarocks install fplot
+```
+
+This command will download and install the **fplot** library and make it available for use in your fennel/lua projects. Make sure you have **Gnuplot** installed and accessible in your system's `PATH`, as fplot relies on it to generate plots.
+### Git Clone
+
+Another way to use fplot is to drop `fplot.fnl` and the `fennel.lua` compiler directly into your project directory. This allows you to write your plotting scripts in Fennel, which is the most natural way to use the library.
 
 1. Download `fplot.fnl` and `fennel.lua` into your project.
 
