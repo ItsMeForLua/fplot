@@ -1,5 +1,5 @@
 package = "fplot"
-version = "1.0.2"
+version = "1.0.2-1"
 
 source = {
   url = "git+https://github.com/ItsMeForLua/fplot.git",
