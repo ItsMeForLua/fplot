@@ -1,9 +1,9 @@
 package = "fplot"
-version = "1.0.2-1"
+version = "1.0.2-2"
 
 source = {
   url = "git+https://github.com/ItsMeForLua/fplot.git",
-  tag = "v1.0.2"
+  tag = "v1.0.2-2"
 }
 
 description = {
@@ -24,6 +24,6 @@ dependencies = {
 build = {
   type = "command",
   install_command = [[
-    cp fplot.fnl "$(LUADIR)"
+    cp fplot.fnl "$(LUA_DIR)"
   ]]
 }
