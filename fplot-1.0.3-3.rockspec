@@ -1,8 +1,8 @@
 package = "fplot"
-version = "1.0.3-1"
+version = "1.0.3-3"
 source = {
   url = "git+https://github.com/ItsMeForLua/fplot.git",
-  tag = "v1.0.3"
+  tag = "v1.0.3-3"
 }
 description = {
   summary = "A declarative plotting library for Fennel and Lua, powered by Gnuplot.",
