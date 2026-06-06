@@ -1,2 +1,2 @@
-fplot-1.0.3-4.rockspec linguist-vendored
+*.rockspec linguist-vendored
 fplot.fnl linguist-language=Fennel
