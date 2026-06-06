@@ -1,0 +1,35 @@
+name: Sync wiki/ to GitHub Wiki
+
+on:
+  push:
+    branches: [gh-wiki]
+    paths:
+      - wiki/**
+      - .github/workflows/sync-wiki.yml
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: wiki
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main-repo
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki-repo
+
+      - run: |
+          rsync -av --delete main-repo/wiki/ wiki-repo/
+          cd wiki-repo
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git diff --cached --quiet || git commit -m "Sync wiki"
+          git push
