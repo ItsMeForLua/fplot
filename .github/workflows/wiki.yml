@@ -26,10 +26,14 @@ jobs:
           path: wiki-repo
 
       - run: |
-          rsync -av --delete main-repo/wiki/ wiki-repo/
+          rsync -av --delete --exclude='.git' main-repo/wiki/ wiki-repo/
           cd wiki-repo
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add .
           git diff --cached --quiet || git commit -m "Sync wiki"
           git push
+
+# Logs showed that rsync --delete is wiping the .git/ folder...
+# out of wiki-repo before we cd into it, so when we run git add . 
+# there's no git repo left. The fixed code above should work now.
