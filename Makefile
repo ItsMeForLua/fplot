@@ -1,4 +1,4 @@
-.PHONY: help clean-tex clean-scripts clean-lwarp clean-html clean-all-exclude-html clean-all-include-html n-tree lwarpmk limages find-html-deps compile-tex html auto-run
+.PHONY: help clean-tex clean-scripts clean-lwarp clean-docs clean-all-exclude-docs clean-all-include-docs n-tree lwarpmk limages find-html-deps compile-tex docs auto-run
 .DEFAULT_GOAL := help
 
 help:
@@ -6,10 +6,10 @@ help:
 	@echo "  make clean-tex                 Remove TeX build artifacts"
 	@echo "  make clean-scripts             Remove script output artifacts"
 	@echo "  make clean-lwarp               Remove lwarp artifacts"
-	@echo "  make clean-html                Remove html/ directory"
-	@echo "  make clean-all-exclude-html    Clean all artifacts except html/"
-	@echo "  make clean-all-include-html    Clean all artifacts including html/"
-	@echo "  make html FILE=<name>          Build html/ from <name>.html"
+	@echo "  make clean-docs                Remove docs/ directory"
+	@echo "  make clean-all-exclude-docs    Clean all artifacts except docs/"
+	@echo "  make clean-all-include-docs    Clean all artifacts including docs/"
+	@echo "  make docs FILE=<name>          Build docs/ from <name>.html"
 	@echo "  make lwarpmk FILE=<name>       Run lwarpmk html <name>"
 	@echo "  make limages FILE=<name>       Run lwarpmk limages if <name>-images.txt exists"
 	@echo "  make find-html-deps FILE=<name> List href/src dependencies from <name>.html"
@@ -31,24 +31,24 @@ clean-lwarp:
 	@rm -f *.lwarpmkconf *_html.tex *.cut *.css *.ist *.conf *.xdy *_html.pdf *.sidetoc *.html
 	@rm -f tex/*.lwarpmkconf tex/*_html.tex tex/*.cut tex/*.listing tex/.log tex/*.css tex/*.ist tex/*.conf tex/*.xdy tex/*_html.pdf tex/*.sidetoc tex/*.html
 
-clean-html:
-	@echo "Cleaning html/ completely..."
-	@rm -rf html/
+clean-docs:
+	@echo "Cleaning docs/ completely..."
+	@rm -rf docs/
 
-clean-all-exclude-html:
+clean-all-exclude-docs:
 	@$(MAKE) clean-tex
 	@$(MAKE) clean-scripts
 	@$(MAKE) clean-lwarp
-	@echo "Cleaned project of all artifacts excluding html/..."
+	@echo "Cleaned project of all artifacts excluding docs/..."
 
-clean-all-include-html:
+clean-all-include-docs:
 	@$(MAKE) clean-tex
 	@$(MAKE) clean-scripts
 	@$(MAKE) clean-lwarp
-	@$(MAKE) clean-html
-	@echo "Cleaned project of all artifacts including html/..."
+	@$(MAKE) clean-docs
+	@echo "Cleaned project of all artifacts including docs/..."
 
-html:
+docs:
 	@echo "FILE is currently set to: '$(FILE)'"; \
 	if [ -z "$(FILE)" ]; then \
 		echo "Warning: FILE is empty."; \
@@ -61,21 +61,22 @@ html:
 		[yY]|[yY][eE][sS]) ;; \
 		*) echo "Aborted."; exit 1 ;; \
 	esac
-	@echo "Building html/ directory..."
-	@mkdir -p html
-	@cp "tex/$(FILE).html" html/index.html
-	@cp tex/*.html html/ 2>/dev/null || true
-	@cp tex/lwarp.css tex/lwarp_formal.css tex/lwarp_sagebrush.css tex/lwarp_mathjax.txt html/ 2>/dev/null || true
+	@echo "Building docs/ directory..."
+	@mkdir -p docs
+	@cp "tex/$(FILE).html" docs/index.html
+	@cp tex/*.html docs/ 2>/dev/null || true
+	@cp tex/lwarp.css tex/lwarp_formal.css tex/lwarp_sagebrush.css tex/lwarp_mathjax.txt docs/ 2>/dev/null || true
 	@grep -oE '(href|src)="[^"]+"' tex/*.html | \
 		sed -n 's/.*="\([^/:][^"]*\)".*/\1/p' | \
 		sort -u | \
 		while read -r file; do \
 			if [ -e "tex/$$file" ]; then \
-				mkdir -p "html/$$(dirname "$$file")"; \
-				cp -r "tex/$$file" "html/$$file"; \
-				echo "Copied asset: tex/$$file to html/$$file"; \
+				mkdir -p "docs/$$(dirname "$$file")"; \
+				cp -r "tex/$$file" "docs/$$file"; \
+				echo "Copied asset: tex/$$file to docs/$$file"; \
 			fi; \
 		done
+
 lwarpmk:
 	@rm -f "tex/$(FILE).html"  # prevent lwarpmk timestamp skip on first call
 	@echo "Generating HTML bibliography via Biber..."
@@ -143,13 +144,13 @@ compile-tex:
 
 auto-run:
 	@test -n "$(FILE)" || (echo "Usage: make auto-run FILE=YourFile" >&2; exit 1)
-	@$(MAKE) clean-all-include-html FILE="$(FILE)"
+	@$(MAKE) clean-all-include-docs FILE="$(FILE)"
 	@$(MAKE) compile-tex FILE="$(FILE)"
 	@$(MAKE) lwarpmk FILE="$(FILE)"
 	@$(MAKE) limages FILE="$(FILE)"
-	@$(MAKE) html FILE="$(FILE)"
-	@$(MAKE) clean-all-exclude-html FILE="$(FILE)"
-	@rm -rf tex/html 2>/dev/null || true
+	@$(MAKE) docs FILE="$(FILE)"
+	@$(MAKE) clean-all-exclude-docs FILE="$(FILE)"
+	@rm -rf tex/docs 2>/dev/null || true
 	@rm -rf tex/imgs 2>/dev/null || true
 	@rm $(FILE).pdf 2>/dev/null || true
 	@echo "FILE=$(FILE): completed."
