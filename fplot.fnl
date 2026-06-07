@@ -83,6 +83,7 @@
         sep (or separator "")]
     (table.concat filtered sep)))
 
+;; We need to make sure output-file uses single quotes, because in Gnuplot, strings enclosed in double quotes are parsed for C-style escape sequences.
 (fn option->cmd [k v opts]
   (case k
     :title
@@ -98,8 +99,8 @@
           "windows" (.. "set term windows" (or size-str "") (or font-str "") "\n")
           "wxt"     (.. "set term wxt" (or size-str "") (or font-str "") "\n")
           _         (.. "set term " v (or size-str "") (or font-str "") "\n")))
-    :output-file
-      (when (and v (not= v nil)) (.. "set output \"" v "\"\n"))
+    :output-file ; Gnuplot should read the path for output literally.
+      (when (and v (not= v nil)) (.. "set output '" v "'\n"))
     :x-label
       (when (and v (not= v "")) (.. "set xlabel \"" v "\"\n"))
     :y-label
@@ -203,7 +204,7 @@
 (fn dataset->plot-clause [ds]
   "Builds a plot clause. It now expects ds.data to be a filename."
   (let [{:data filename :using using :style style :title title} ds]
-    (var clause (.. "\"" filename "\""
+    (var clause (.. "'" filename "'"
                     (if using (.. " using " using) "")
                     " with " style
                     (dataset-style-cmd ds)))
@@ -265,7 +266,8 @@
 
 (fn get-tempfile [prefix ext]
   "Get a temporary filename with a given prefix and extension."
-  (let [tmp (or (os.getenv "TMP") (os.getenv "TEMP") ".")
+  (let [raw-tmp (or (os.getenv "TMP") (os.getenv "TEMP") ".")
+        tmp (string.gsub raw-tmp "\\" "/")
         name (if (= tmp ".")
                  (.. prefix "-" (math.random 1000000) "." ext)
                  (.. tmp "/" prefix "-" (math.random 1000000) "." ext))]
