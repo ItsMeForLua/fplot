@@ -1,0 +1,1274 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<meta name="generator" content="LaTeX Lwarp package" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>fplot Manual — Advanced Features</title>
+<link rel="stylesheet" type="text/css" href="lwarp.css" />
+
+<script>
+// Lwarp MathJax emulation code
+//
+// Based on code by Davide P. Cervone.
+// Equation numbering: https://github.com/mathjax/MathJax/issues/2427
+// Starred and ifnextchar macros: https://github.com/mathjax/MathJax/issues/2428
+// \left, \right delimiters: https://github.com/mathjax/MathJax/issues/2535
+//
+// Modified by Brian Dunn to adjust equation numbering and add subequations.
+//
+// LaTeX can use \seteqnumber{subequations?}{section}{number} before each equation.
+// subequations? is 0 usually, 1 if inside subequations.
+// section is a string printed as-is, or empty.
+// number is auto-incremented by MathJax between equations.
+//
+MathJax = {
+    subequations: "0",
+    section: "",
+    loader: {
+         load: ['[tex]/tagformat', '[tex]/textmacros'],
+    },
+    startup: {
+         ready() {
+             //       These would be replaced by import commands if you wanted to make
+             //       a proper extension.
+             const Configuration = MathJax._.input.tex.Configuration.Configuration;
+             const CommandMap = MathJax._.input.tex.SymbolMap.CommandMap;
+             const Macro = MathJax._.input.tex.Symbol.Macro;
+             const TexError = MathJax._.input.tex.TexError.default;
+             const ParseUtil = MathJax._.input.tex.ParseUtil.default;
+             const expandable = MathJax._.util.Options.expandable;
+
+
+             //       Insert the replacement string into the TeX string, and check
+             //       that there haven't been too many maxro substitutions (prevents
+             //       infinite loops).
+             const useArgument = (parser, text) => {
+                 parser.string = ParseUtil.addArgs(parser, text, parser.string.slice(parser.i));
+                 parser.i = 0;
+                 if (++parser.macroCount > parser.configuration.options.maxMacros) {
+                     throw new TexError('MaxMacroSub1',
+                     'MathJax maximum macro substitution count exceeded; ' +
+                     'is there a recursive macro call?');
+                 }
+             }
+
+
+             //       Create the command map for:
+             //          \ifstar, \ifnextchar, \ifblank, \ifstrequal, \gsub, \seteqnumber
+             new CommandMap('Lwarp-macros', {
+                 ifstar: 'IfstarFunction',
+                 ifnextchar: 'IfnextcharFunction',
+                 ifblank: 'IfblankFunction',
+                 ifstrequal: 'IfstrequalFunction',
+                 gsubstitute: 'GsubstituteFunction',
+                 seteqnumber: 'SeteqnumberFunction'
+             }, {
+                 //      This function implements an ifstar macro.
+                 IfstarFunction(parser, name) {
+                     const resultstar = parser.GetArgument(name);
+                     const resultnostar = parser.GetArgument(name);
+                     const star = parser.GetStar();                        // true if there is a *
+                     useArgument(parser, star ? resultstar : resultnostar);
+                 },
+
+
+                 //      This function implements an ifnextchar macro.
+                 IfnextcharFunction(parser, name) {
+                     let whichchar = parser.GetArgument(name);
+                     if (whichchar.match(/^(?:0x[0-9A-F]+|[0-9]+)$/i)) {
+                         // $ syntax highlighting
+                         whichchar = String.fromCodePoint(parseInt(whichchar));
+                     }
+                     const resultnextchar = parser.GetArgument(name);
+                     const resultnotnextchar = parser.GetArgument(name);
+                     const gotchar = (parser.GetNext() === whichchar);
+                     useArgument(parser, gotchar ? resultnextchar : resultnotnextchar);
+                 },
+
+
+                 // This function implements an ifblank macro.
+                 IfblankFunction(parser, name) {
+                     const blankarg = parser.GetArgument(name);
+                     const resultblank = parser.GetArgument(name);
+                     const resultnotblank = parser.GetArgument(name);
+                     const isblank = (blankarg.trim() == "");
+                     useArgument(parser, isblank ? resultblank : resultnotblank);
+                 },
+
+
+                 // This function implements an ifstrequal macro.
+                 IfstrequalFunction(parser, name) {
+                     const strequalfirst = parser.GetArgument(name);
+                     const strequalsecond = parser.GetArgument(name);
+                     const resultequal = parser.GetArgument(name);
+                     const resultnotequal = parser.GetArgument(name);
+                     const isequal = (strequalfirst == strequalsecond);
+                     useArgument(parser, isequal ? resultequal : resultnotequal);
+                 },
+
+
+                 // This function implements a gsub macro.
+                 GsubstituteFunction(parser, name) {
+                     const gsubfirst = parser.GetArgument(name);
+                     const gsubsecond = parser.GetArgument(name);
+                     const gsubthird = parser.GetArgument(name);
+                     let gsubresult=gsubfirst.replace(gsubsecond, gsubthird);
+                     useArgument(parser, gsubresult);
+                 },
+
+
+                 //      This function modifies the equation numbers.
+                 SeteqnumberFunction(parser, name) {
+                         //   Get the macro parameters
+                         const star = parser.GetStar();                       // true if there is a *
+                         const optBrackets = parser.GetBrackets(name);        // contents of optional brackets
+                         const newsubequations = parser.GetArgument(name);       // the subequations argument
+                         const neweqsection = parser.GetArgument(name);       // the eq section argument
+                         const neweqnumber = parser.GetArgument(name);        // the eq number argument
+                         MathJax.config.subequations=newsubequations ;        // a string with boolean meaning
+                         MathJax.config.section=neweqsection ;                // a string with numeric meaning
+                         parser.tags.counter = parser.tags.allCounter = neweqnumber ;
+                 }
+
+
+             });
+
+
+             //       Create the Lwarp-macros package
+             Configuration.create('Lwarp-macros', {
+                 handler: {macro: ['Lwarp-macros']}
+             });
+
+
+             MathJax.startup.defaultReady();
+
+
+             // For forward references:
+             MathJax.startup.input[0].preFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         MathJax.config.subequations = math.inputData.recompile.subequations;
+                         MathJax.config.section = math.inputData.recompile.section;
+                 }
+             });
+             MathJax.startup.input[0].postFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         math.inputData.recompile.subequations = MathJax.config.subequations;
+                         math.inputData.recompile.section = MathJax.config.section;
+                 }
+             });
+
+
+                 // For \left, \right with unicode-math:
+                 const {DelimiterMap} = MathJax._.input.tex.SymbolMap;
+                 const {Symbol} = MathJax._.input.tex.Symbol;
+                 const {MapHandler} = MathJax._.input.tex.MapHandler;
+                 const delimiter = MapHandler.getMap('delimiter');
+                 delimiter.add('\\lBrack', new Symbol('\\lBrack', '\u27E6'));
+                 delimiter.add('\\rBrack', new Symbol('\\rBrack', '\u27E7'));
+                 delimiter.add('\\lAngle', new Symbol('\\lAngle', '\u27EA'));
+                 delimiter.add('\\rAngle', new Symbol('\\rAngle', '\u27EB'));
+                 delimiter.add('\\lbrbrak', new Symbol('\\lbrbrak', '\u2772'));
+                 delimiter.add('\\rbrbrak', new Symbol('\\rbrbrak', '\u2773'));
+                 delimiter.add('\\lbag', new Symbol('\\lbag', '\u27C5'));
+                 delimiter.add('\\rbag', new Symbol('\\rbag', '\u27C6'));
+                 delimiter.add('\\llparenthesis', new Symbol('\\llparenthesis', '\u2987'));
+                 delimiter.add('\\rrparenthesis', new Symbol('\\rrparenthesis', '\u2988'));
+                 delimiter.add('\\llangle', new Symbol('\\llangle', '\u2989'));
+                 delimiter.add('\\rrangle', new Symbol('\\rrangle', '\u298A'));
+                 delimiter.add('\\Lbrbrak', new Symbol('\\Lbrbrak', '\u27EC'));
+                 delimiter.add('\\Rbrbrak', new Symbol('\\Rbrbrak', '\u27ED'));
+                 delimiter.add('\\lBrace', new Symbol('\\lBrace', '\u2983'));
+                 delimiter.add('\\rBrace', new Symbol('\\rBrace', '\u2984'));
+                 delimiter.add('\\lParen', new Symbol('\\lParen', '\u2985'));
+                 delimiter.add('\\rParen', new Symbol('\\rParen', '\u2986'));
+                 delimiter.add('\\lbrackubar', new Symbol('\\lbrackubar', '\u298B'));
+                 delimiter.add('\\rbrackubar', new Symbol('\\rbrackubar', '\u298C'));
+                 delimiter.add('\\lbrackultick', new Symbol('\\lbrackultick', '\u298D'));
+                 delimiter.add('\\rbracklrtick', new Symbol('\\rbracklrtick', '\u298E'));
+                 delimiter.add('\\lbracklltick', new Symbol('\\lbracklltick', '\u298F'));
+                 delimiter.add('\\rbrackurtick', new Symbol('\\rbrackurtick', '\u2990'));
+                 delimiter.add('\\langledot', new Symbol('\\langledot', '\u2991'));
+                 delimiter.add('\\rangledot', new Symbol('\\rangledot', '\u2992'));
+                 delimiter.add('\\lparenless', new Symbol('\\lparenless', '\u2993'));
+                 delimiter.add('\\rparengtr', new Symbol('\\rparengtr', '\u2994'));
+                 delimiter.add('\\Lparengtr', new Symbol('\\Lparengtr', '\u2995'));
+                 delimiter.add('\\Rparenless', new Symbol('\\Rparenless', '\u2996'));
+                 delimiter.add('\\lblkbrbrak', new Symbol('\\lblkbrbrak', '\u2997'));
+                 delimiter.add('\\rblkbrbrak', new Symbol('\\rblkbrbrak', '\u2998'));
+                 delimiter.add('\\lvzigzag', new Symbol('\\lvzigzag', '\u29D8'));
+                 delimiter.add('\\rvzigzag', new Symbol('\\rvzigzag', '\u29D9'));
+                 delimiter.add('\\Lvzigzag', new Symbol('\\Lvzigzag', '\u29DA'));
+                 delimiter.add('\\Rvzigzag', new Symbol('\\Rvzigzag', '\u29DB'));
+                 delimiter.add('\\lcurvyangle', new Symbol('\\lcurvyangle', '\u29FC'));
+                 delimiter.add('\\rcurvyangle', new Symbol('\\rcurvyangle', '\u29FD'));
+                 delimiter.add('\\Vvert', new Symbol('\\Vvert', '\u2980'));
+         }       // ready
+    },           // startup
+
+
+    tex: {
+         packages: {'[+]': ['tagformat', 'Lwarp-macros', 'textmacros']},
+         tags: "ams",
+                 tagformat: {
+                         number: function (n) {
+                              if(MathJax.config.subequations==0)
+                                     return(MathJax.config.section + n);
+                              else
+                                     return(MathJax.config.section + String.fromCharCode(96+n));
+                         },
+                 },
+    }
+}
+</script>
+
+
+<script
+         id="MathJax-script"
+         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/stackoverflow-light.min.css">
+<style>.hljs { background: transparent !important; padding: 0 !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lisp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lua.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("pre.programlisting").forEach(el => {
+    const rawText = el.textContent;
+    const code = document.createElement("code");
+    // Auto-detect Bash, Lua, or default to Lisp for Fennel
+    if (rawText.includes("git clone") || rawText.includes("cd ") || rawText.includes("make ") || rawText.trim().startsWith("$")) {
+      code.className = "language-bash";
+    } else if (rawText.includes("function") || rawText.includes("local ") || rawText.includes("require(")) {
+      code.className = "language-lua";
+    } else {
+      code.className = "language-lisp";
+    }
+    code.textContent = rawText;
+    el.innerHTML = "";
+    el.appendChild(code);
+    hljs.highlightElement(code);
+  });
+});
+</script>
+</head>
+<body>
+
+
+<a id="fplot_wiki-autopage-92"></a>
+<div class="pagegrid">
+
+
+<nav class="topnavigation"><a href="fplot_wiki.html" class="linkhome" >
+Home</a></nav>
+<div class="sidetoccontainer">
+
+
+<nav class="sidetoc">
+
+
+<div class="sidetoctitle">
+
+<p>
+<span class="sidetocthetitle">fplot Manual</span>
+</p>
+
+<p>
+Contents
+</p>
+</div>
+
+
+<div class="sidetoccontents">
+
+<p>
+<a href="fplot_wiki.html" class="linkhome" >
+Home</a>
+</p>
+
+<p>
+<a href="Welcome-fplot-Wiki.html#autosec-5" class="tocsection" >
+<span class="sectionnumber">1</span>&#x2003;Welcome to the fplot Wiki!</a>
+</p>
+
+
+<p>
+<a href="Installation.html#autosec-13" class="tocsection" >
+<span class="sectionnumber">2</span>&#x2003;Installation</a>
+</p>
+
+
+<p>
+<a href="Getting-Started-Tutorial.html#autosec-33" class="tocsection" >
+<span class="sectionnumber">3</span>&#x2003;Getting Started Tutorial</a>
+</p>
+
+
+<p>
+<a href="Configuration-Options.html#autosec-56" class="tocsection" >
+<span class="sectionnumber">4</span>&#x2003;Configuration Options</a>
+</p>
+
+
+<p>
+<a href="Dataset-Configuration.html#autosec-73" class="tocsection" >
+<span class="sectionnumber">5</span>&#x2003;Dataset Configuration</a>
+</p>
+
+
+<p>
+<a href="Advanced-Features.html#autosec-93" class="tocsection" >
+<span class="sectionnumber">6</span>&#x2003;Advanced Features</a>
+</p>
+
+
+<p>
+<a href="Examples.html#autosec-131" class="tocsection" >
+<span class="sectionnumber">7</span>&#x2003;Examples</a>
+</p>
+
+
+<p>
+<a href="Biotech-Applications.html#autosec-157" class="tocsection" >
+<span class="sectionnumber">8</span>&#x2003;Biotech Applications</a>
+</p>
+
+
+<p>
+<a href="Troubleshooting-Guide.html#autosec-171" class="tocsection" >
+<span class="sectionnumber">9</span>&#x2003;Troubleshooting Guide</a>
+</p>
+
+
+</div>
+
+</nav>
+
+</div>
+
+
+<main class="bodycontainer">
+
+
+<section class="textbody">
+
+<h1>fplot Manual</h1>
+
+<!--MathJax customizations:-->
+<div data-nosnippet
+    style="display:none"
+>
+
+\(\newcommand{\footnotename}{footnote}\)
+
+\(\def \LWRfootnote {1}\)
+
+\(\newcommand {\footnote }[2][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\newcommand {\footnotemark }[1][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\let \LWRorighspace \hspace \)
+
+\(\renewcommand {\hspace }{\ifstar \LWRorighspace \LWRorighspace }\)
+
+\(\newcommand {\TextOrMath }[2]{#2}\)
+
+\(\newcommand {\mathnormal }[1]{{#1}}\)
+
+\(\newcommand \ensuremath [1]{#1}\)
+
+\(\newcommand {\LWRframebox }[2][]{\fbox {#2}} \newcommand {\framebox }[1][]{\LWRframebox } \)
+
+\(\newcommand {\setlength }[2]{}\)
+
+\(\newcommand {\addtolength }[2]{}\)
+
+\(\newcommand {\setcounter }[2]{}\)
+
+\(\newcommand {\addtocounter }[2]{}\)
+
+\(\newcommand {\arabic }[1]{}\)
+
+\(\newcommand {\number }[1]{}\)
+
+\(\newcommand {\noalign }[1]{\text {#1}\notag \\}\)
+
+\(\newcommand {\cline }[1]{}\)
+
+\(\newcommand {\directlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\luatexdirectlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\protect }{}\)
+
+\(\def \LWRabsorbnumber #1 {}\)
+
+\(\def \LWRabsorbquotenumber &quot;#1 {}\)
+
+\(\newcommand {\LWRabsorboption }[1][]{}\)
+
+\(\newcommand {\LWRabsorbtwooptions }[1][]{\LWRabsorboption }\)
+
+\(\def \mathchar {\ifnextchar &quot;\LWRabsorbquotenumber \LWRabsorbnumber }\)
+
+\(\def \mathcode #1={\mathchar }\)
+
+\(\let \delcode \mathcode \)
+
+\(\let \delimiter \mathchar \)
+
+\(\def \oe {\unicode {x0153}}\)
+
+\(\def \OE {\unicode {x0152}}\)
+
+\(\def \ae {\unicode {x00E6}}\)
+
+\(\def \AE {\unicode {x00C6}}\)
+
+\(\def \aa {\unicode {x00E5}}\)
+
+\(\def \AA {\unicode {x00C5}}\)
+
+\(\def \o {\unicode {x00F8}}\)
+
+\(\def \O {\unicode {x00D8}}\)
+
+\(\def \l {\unicode {x0142}}\)
+
+\(\def \L {\unicode {x0141}}\)
+
+\(\def \ss {\unicode {x00DF}}\)
+
+\(\def \SS {\unicode {x1E9E}}\)
+
+\(\def \dag {\unicode {x2020}}\)
+
+\(\def \ddag {\unicode {x2021}}\)
+
+\(\def \P {\unicode {x00B6}}\)
+
+\(\def \copyright {\unicode {x00A9}}\)
+
+\(\def \pounds {\unicode {x00A3}}\)
+
+\(\let \LWRref \ref \)
+
+\(\renewcommand {\ref }{\ifstar \LWRref \LWRref }\)
+
+\( \newcommand {\multicolumn }[3]{#3}\)
+
+\(\require {textcomp}\)
+
+\(\newcommand {\intertext }[1]{\text {#1}\notag \\}\)
+
+\(\let \Hat \hat \)
+
+\(\let \Check \check \)
+
+\(\let \Tilde \tilde \)
+
+\(\let \Acute \acute \)
+
+\(\let \Grave \grave \)
+
+\(\let \Dot \dot \)
+
+\(\let \Ddot \ddot \)
+
+\(\let \Breve \breve \)
+
+\(\let \Bar \bar \)
+
+\(\let \Vec \vec \)
+
+\(\newcommand {\toprule }[1][]{\hline }\)
+
+\(\let \midrule \toprule \)
+
+\(\let \bottomrule \toprule \)
+
+\(\def \LWRbooktabscmidruleparen (#1)#2{}\)
+
+\(\newcommand {\LWRbooktabscmidrulenoparen }[1]{}\)
+
+\(\newcommand {\cmidrule }[1][]{\ifnextchar (\LWRbooktabscmidruleparen \LWRbooktabscmidrulenoparen }\)
+
+\(\newcommand {\morecmidrules }{}\)
+
+\(\newcommand {\specialrule }[3]{\hline }\)
+
+\(\newcommand {\addlinespace }[1][]{}\)
+
+</div>
+
+<!--
+...... section Advanced Features ......
+-->
+<h4 id="autosec-93"><span class="sectionnumber">6&#x2003;</span>Advanced Features</h4>
+<a id="fplot_wiki-autopage-93"></a>
+<a id="fplot_wiki-autofile-6"></a>
+
+<p>
+This page covers some of the more advanced capabilities of <kbd>fplot</kbd>, such as creating composite plots, adding annotations, and using raw Gnuplot commands.
+</p>
+<blockquote>
+
+<p>
+<b>NOTE:</b> Fennel Macros are not included in this wiki page, because they have their own dedicated section.
+</p>
+</blockquote>
+<!--
+...... subsection Multiplot ......
+-->
+<h5 id="autosec-95"><span class="sectionnumber">6.1&#x2003;</span>Multiplot</h5>
+<a id="fplot_wiki-autopage-95"></a>
+
+
+<p>
+<kbd>fplot</kbd> makes it easy to combine several plots into a single image using Gnuplot’s multiplot feature. You enable this by passing multiple plot configuration tables to the <kbd>fplot.plot</kbd> function. The <b>last
+table</b> argument is special: it must contain the <kbd>:multiplot</kbd> configuration within its <kbd>:options</kbd> table.
+</p>
+
+<p>
+The <kbd>:multiplot</kbd> table accepts the following keys:
+</p>
+
+<p>
+<kbd>:layout</kbd>: A table <kbd>[rows, cols]</kbd> defining the grid for the subplots.
+</p>
+
+<p>
+<kbd>:title</kbd>: An optional overall title for the entire multiplot figure.
+</p>
+<!--
+...... subsubsection Example: 2x1 Multiplot ......
+-->
+<h6 id="autosec-96">Example: 2x1 Multiplot</h6>
+<a id="fplot_wiki-autopage-96"></a>
+
+
+<p>
+This example creates two plots stacked vertically.
+</p>
+<!--
+...... paragraph Fennel ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-97">Fennel</span>
+<a id="fplot_wiki-autopage-97"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(local fplot (require :fplot))
+;; --- Data ---
+(local sin-data [])
+(local cos-data [])
+(for [i 0 100]
+(let [x (* i 0.1)]
+(table.insert sin-data [x (math.sin x)])
+(table.insert cos-data [x (math.cos x)])))
+;; --- Plotting ---
+(fplot.plot
+;; Plot 1: Sine
+{:options {:title "Sine"}
+        :datasets [{:data sin-data}]}
+;; Plot 2: Cosine
+{:options {:title "Cosine"}
+        :datasets [{:data cos-data}]}
+;; Multiplot Configuration (in the last table)
+{:options {:multiplot {:layout [2 1]
+                        :title "Trigonometric Functions"}}})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... paragraph Lua ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-99">Lua</span>
+<a id="fplot_wiki-autopage-99"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+require("fennel").install()
+local fplot = require("fplot")
+
+-- --- Data ---
+local sin_data = {}
+local cos_data = {}
+for i = 0, 100 do
+local x = i * 0.1
+table.insert(sin_data, {x, math.sin(x)})
+table.insert(cos_data, {x, math.cos(x)})
+end
+
+-- --- Plotting ---
+fplot.plot(
+-- Plot 1: Sine
+{
+        options = { title = "Sine" },
+        datasets = { { data = sin_data } }
+},
+
+-- Plot 2: Cosine
+{
+        options = { title = "Cosine" },
+        datasets = { { data = cos_data } }
+},
+
+-- Multiplot Configuration (in the last table)
+{
+        options = {
+                multiplot = {
+                        layout = {2, 1},
+                        title = "Trigonometric Functions"
+                }
+        }
+}
+)
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+<i>(The resulting plot generated by fplot)</i>
+</p>
+<div class="center">
+
+<p>
+<span
+    class="fbox"
+    style="display:inline-block ; border:1pt solid #000000; padding:3pt ; color:#000000"
+><i>[Image: P6.ex.Plot1]</i></span>
+</p>
+</div>
+
+<p>
+<span
+    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
+><!----></span>
+</p>
+<!--
+...... subsection Labels, Arrows, and Objects ......
+-->
+<h5 id="autosec-102"><span class="sectionnumber">6.2&#x2003;</span>Labels, Arrows, and Objects</h5>
+<a id="fplot_wiki-autopage-102"></a>
+
+
+<p>
+You can add arbitrary annotations to your plot using the <kbd>:labels</kbd>, <kbd>:arrows</kbd>, and <kbd>:objects</kbd> options.
+</p>
+
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> <kbd>:labels</kbd>: Add text to the plot. Each label is a table <kbd>[text, x, y, options]</kbd>.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> <kbd>:arrows</kbd>: Draw arrows. Each arrow is a table <kbd>[x1, y1, x2, y2, options]</kbd>.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> <kbd>:objects</kbd>: Draw shapes (rectangles, circles, etc.). Each object is a table <kbd>[type, definition]</kbd>.
+</p>
+</li>
+</ul>
+<!--
+...... subsubsection Example: Annotating a Peak ......
+-->
+<h6 id="autosec-103">Example: Annotating a Peak</h6>
+<a id="fplot_wiki-autopage-103"></a>
+<!--
+...... paragraph Fennel ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-104">Fennel</span>
+<a id="fplot_wiki-autopage-104"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(fplot.plot
+{:options {:title "Annotated Plot"
+                :x-range [0 10]
+                :y-range [0 12]
+                :labels [["Important Peak" 5 10.5 "center"]]
+                :arrows [[7 8 5.2 9.8 "head filled"]]
+                :objects [["rectangle" "from 4,0 to 6,10 fs transparent solid 0.1 noborder"]]}
+        :datasets [{:data [[1 2] [3 7] [5 10] [7 6] [9 3]]
+                :style "linespoints"}]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... paragraph Lua ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-106">Lua</span>
+<a id="fplot_wiki-autopage-106"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+fplot.plot({
+        options = {
+                title = "Annotated Plot",
+                ["x-range"] = {0, 10},
+                ["y-range"] = {0, 12},
+                labels = {
+                        {"Important Peak", 5, 10.5, "center"}
+                },
+                arrows = {
+                        {7, 8, 5.2, 9.8, "head filled"}
+                },
+                objects = {
+                        {"rectangle", "from 4,0 to 6,10 fs transparent solid 0.1 noborder"}
+                }
+        },
+        datasets = {
+                {
+                        data = {{1, 2}, {3, 7}, {5, 10}, {7, 6}, {9, 3}},
+                        style = "linespoints"
+                }
+        }
+})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+<i>(The resulting plot generated by fplot)</i>
+</p>
+<div class="center">
+
+<p>
+<span
+    class="fbox"
+    style="display:inline-block ; border:1pt solid #000000; padding:3pt ; color:#000000"
+><i>[Image: P6.ex.Plot2]</i></span>
+</p>
+</div>
+
+<p>
+<span
+    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
+><!----></span>
+</p>
+<!--
+...... subsection Custom Tics ......
+-->
+<h5 id="autosec-109"><span class="sectionnumber">6.3&#x2003;</span>Custom Tics</h5>
+<a id="fplot_wiki-autopage-109"></a>
+
+
+<p>
+You can take full control over the axis tic marks using the <kbd>:xtics</kbd> and <kbd>:ytics</kbd> options. This is useful for categorical data or for highlighting specific points. Provide a list of <kbd>["label",
+value]</kbd> pairs.
+</p>
+<!--
+...... subsubsection Example: Labeled Tics ......
+-->
+<h6 id="autosec-110">Example: Labeled Tics</h6>
+<a id="fplot_wiki-autopage-110"></a>
+<!--
+...... paragraph Fennel ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-111">Fennel</span>
+<a id="fplot_wiki-autopage-111"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(local fplot (require :fplot))
+
+(fplot.plot
+{:options {:title "Quarterly Sales"
+                :xtics [["Q1" 1] ["Q2" 2] ["Q3" 3] ["Q4" 4]]
+                :ytics [0 10000 20000 30000]
+                :y-label "Revenue (\$)"}
+        :datasets [{:data [[1 15000] [2 22000] [3 18000] [4 25000]]
+                :style "boxes"
+                :title "Sales"}]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... paragraph Lua ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-113">Lua</span>
+<a id="fplot_wiki-autopage-113"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+require("fennel").install()
+local fplot = require("fplot")
+
+fplot.plot({
+        options = {
+                title = "Quarterly Sales",
+                xtics = {{"Q1", 1}, {"Q2", 2}, {"Q3", 3}, {"Q4", 4}},
+                ytics = {0, 10000, 20000, 30000},
+                ["y-label"] = "Revenue (\$)"
+        },
+        datasets = {
+                {
+                        data = {{1, 15000}, {2, 22000}, {3, 18000}, {4, 25000}},
+                        style = "boxes",
+                        title = "Sales"
+                }
+        }
+})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+<i>(The resulting plot generated by fplot)</i>
+</p>
+<div class="center">
+
+<p>
+<span
+    class="fbox"
+    style="display:inline-block ; border:1pt solid #000000; padding:3pt ; color:#000000"
+><i>[Image: P6.ex.Plot3]</i></span>
+</p>
+</div>
+
+<p>
+<span
+    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
+><!----></span>
+</p>
+<!--
+...... subsection Extra Options (:extra-opts) ......
+-->
+<h5 id="autosec-116"><span class="sectionnumber">6.4&#x2003;</span>Extra Options (:extra-opts)</h5>
+<a id="fplot_wiki-autopage-116"></a>
+
+
+<p>
+For features that are not directly exposed by <kbd>fplot</kbd>, you can use the <kbd>:extra-opts</kbd> option to pass raw command strings directly to the Gnuplot script. This provides an escape hatch for accessing the full
+power of Gnuplot.
+</p>
+<!--
+...... subsubsection Example: Setting a Custom Fill Style ......
+-->
+<h6 id="autosec-117">Example: Setting a Custom Fill Style</h6>
+<a id="fplot_wiki-autopage-117"></a>
+<!--
+...... paragraph Fennel ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-118">Fennel</span>
+<a id="fplot_wiki-autopage-118"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(local fplot (require :fplot))
+
+(fplot.plot
+{:options {:title "Histogram"
+                :extra-opts ["set style fill solid 0.6 border -1"
+                "set style histogram clustered gap 2"
+                "set style data histograms"]}
+        :datasets [{:title "Group A" :data [10 15 12]}
+        {:title "Group B" :data [12 11 14]}]})
+        \end{lstlisting}
+
+         \paragraph{Lua}
+
+        \begin{luacode}
+require("fennel").install()
+local fplot = require("fplot")
+
+fplot.plot({
+        options = {
+                title = "Histogram",
+                ["extra-opts"] = {
+                        "set style fill solid 0.6 border -1",
+                        "set style histogram clustered gap 2",
+                        "set style data histograms"
+                }
+        },
+        datasets = {
+                { title = "Group A", data = {10, 15, 12} },
+                { title = "Group B", data = {12, 11, 14} }
+        }
+})
+        \end{luacode}
+
+         \textit{(The resulting plot generated by fplot)}
+
+         \begin{center}
+                 \fbox{\textit{[Image: P6.ex.Plot4]}}
+         \end{center}
+
+         \noindent\rule{\textwidth}{0.4pt}
+
+         \newpage
+
+         \section{Using Macros and Reusable Components with Fplot}
+
+       A key advantage of using a programmatic plotting library like \texttt{fplot} is the ability to create reusable, composable components. This page explains the difference between Gnuplot&apos;s native macros and the more flexible
+    approach of using Fennel (or Lua) to manage your plotting.
+
+         \subsection{Fennel Macros vs. Lua Functions: A Quick Clarification}
+
+         It&apos;s important to clarify the term "macro."
+
+       \begin{itemize}
+               \item \textbf{Fennel}, as a Lisp, has a \textbf{true macro system}. This means Fennel macros are code that writes code, running at \textbf{compile-time} to transform your program before it even becomes Lua. This allows you
+     to create new syntax and fundamentally change how the language works for your specific needs.
+               \item \textbf{Lua}, on the other hand, does not have a macro system. When we talk about creating "macros" in a Lua context for \texttt{fplot}, we are using the term informally to describe a powerful \textbf{runtime}
+    pattern: \textbf{reusable functions that generate complex data structures} (like tables for options or datasets). We&apos;ll refer to these as "reusable components" or "factory functions" in the Lua examples.
+       \end{itemize}
+
+         \subsection{Gnuplot&apos;s Native Macros}
+
+       Gnuplot has a built-in macro system using the \texttt{@} character (e.g., \texttt{plot @my\_macro}). While \texttt{fplot} does not have a feature to directly use these macros in the plot command, you can still \textbf{define} them
+     using the \texttt{:extra-opts} table.
+
+         This is useful if you have existing Gnuplot scripts or need to set a simple string substitution.
+
+        \begin{fennelcode}
+(fplot.plot
+{:options {:title "Plotting with a Gnuplot Macro"
+                :x-range [-5 5]
+                ;; Define the macro here
+                :extra-opts ["my_func = &apos;sin(x) / x&apos;"]}
+        ;; ...
+})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... subsection Fennel: The Real Macro System ......
+-->
+<h5 id="autosec-120"><span class="sectionnumber">6.5&#x2003;</span>Fennel: The Real Macro System</h5>
+<a id="fplot_wiki-autopage-120"></a>
+
+
+<p>
+The true power of fplot comes from using Fennel itself to create reusable components. Because Fennel has a true macro system, you can create very powerful abstractions. But for most plotting scenerios, simple functions that just
+return tables are usually more than enough.
+</p>
+<!--
+...... subsubsection 1. Reusable Data Generators ......
+-->
+<h6 id="autosec-121">1. Reusable Data Generators</h6>
+<a id="fplot_wiki-autopage-121"></a>
+
+
+<p>
+You can write functions that generate complex datasets.
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+;; A function for generating sinc data
+(fn generate-sinc-data [steps]
+(let [data []
+step-size (/ 40 steps)]
+(for [i (- (/ steps 2)) (/ steps 2)]
+(let [x (* i step-size)
+row []]
+(for [j (- (/ steps 2)) (/ steps 2)]
+(let [y (* j step-size)
+r (+ (math.sqrt (+ (* x x) (* y y))) 1e-9)
+z (/ (math.sin r) r)]
+(table.insert row [x y z])))
+(table.insert data row)))
+data))
+
+;; Use the data generator
+(local sinc-data (generate-sinc-data 40))
+(fplot.splot {:options {:title "Sinc Function"}
+        :datasets [{:data sinc-data :style "pm3d"}]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... subsubsection 2. Reusable Style Templates ......
+-->
+<h6 id="autosec-123">2. Reusable Style Templates</h6>
+<a id="fplot_wiki-autopage-123"></a>
+
+
+<p>
+Create functions that return tables with your preferred plot options. This allows you to maintain a consistent style across many different plots.
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+;; A function for a publication-quality plot style
+(fn publication-style [title]
+{:title title
+        :font "Helvetica,14"
+        :border true
+        :grid true})
+
+;; Use the style template by calling the function
+(fplot.plot
+{:options (publication-style "My Publication Plot")
+        :datasets [...]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... subsubsection 3. Putting It All Together ......
+-->
+<h6 id="autosec-125">3. Putting It All Together</h6>
+<a id="fplot_wiki-autopage-125"></a>
+
+
+<p>
+The real magic happens when you combine these components. You can define a base style, a plot-specific style, and then merge them together. The example below is a complete, and runnable script. Feel free to try it!
+</p>
+<!--
+...... paragraph Fennel ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-126">Fennel</span>
+<a id="fplot_wiki-autopage-126"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(local fplot (require :fplot))
+
+;; Helper function to recursively clone a table.
+(fn table-clone [tbl]
+(let [copy {}]
+(each [k v (pairs tbl)]
+(tset copy k (if (= (type v) "table") (table-clone v) v)))
+copy))
+
+;; Helper function to merge tables.
+(fn merge-tables [a b]
+(let [result (table-clone a)]
+(each [k v (pairs b)]
+(if (and (= (type v) "table") (= (type (. result k)) "table"))
+(tset result k (merge-tables (. result k) v))
+(tset result k v)))
+result))
+
+;; --- Our Reusable Components ---
+(fn generate-line-data [num-points]
+(let [data []]
+(for [i 1 num-points]
+(table.insert data [i (math.random)]))
+data))
+
+(fn base-style []
+{:font "Arial,12"
+        :grid true
+        :output-type "pngcairo"
+        :size [800 600]})
+
+(fn scatter-plot-style []
+{:style "points"
+        :pointtype 7
+        :color "#3366cc"})
+
+;; --- The Plotting Script ---
+(local my-data (generate-line-data 100))
+
+(local plot-specific-opts
+{:title "My Composed Plot"
+        :x-label "Index"
+        :y-label "Random Value"
+        :output-file "my-composed-plot.png"})
+
+(local final-options (merge-tables (base-style) plot-specific-opts))
+(local final-dataset (merge-tables (scatter-plot-style) {:data my-data}))
+
+(fplot.plot {:options final-options
+        :datasets [final-dataset]})
+
+(print "Plot generated at my-new-composed-plot.png")
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... paragraph The Lua Equivalent: Reusable Functions ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-128">The Lua Equivalent: Reusable Functions</span>
+<a id="fplot_wiki-autopage-128"></a>
+
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+require("fennel").install()
+local fplot = require("fplot")
+
+-- Helper functions
+local function table_clone(tbl)
+local copy = {}
+for k, v in pairs(tbl) do
+if type(v) == "table" then
+copy[k] = table_clone(v)
+else
+copy[k] = v
+end
+end
+return copy
+end
+
+local function merge_tables(a, b)
+local result = table_clone(a)
+for k, v in pairs(b) do
+if type(v) == "table" and type(result[k]) == "table" then
+result[k] = merge_tables(result[k], v)
+else
+result[k] = v
+end
+end
+return result
+end
+
+-- --- Our Reusable Components ---
+local function generate_line_data(num_points)
+local data = {}
+for i = 1, num_points do
+table.insert(data, {i, math.random()})
+end
+return data
+end
+
+local function base_style()
+return {
+         font = "Arial,12",
+         grid = true,
+         ["output-type"] = "pngcairo",
+         size = {800, 600}
+}
+end
+
+local function scatter_plot_style()
+return {
+         style = "points",
+         pointtype = 7,
+         color = "#3366cc"
+}
+end
+
+-- --- The Plotting Script ---
+local my_data = generate_line_data(100)
+
+local plot_specific_opts = {
+        title = "My Composed Plot",
+        ["x-label"] = "Index",
+        ["y-label"] = "Random Value",
+        ["output-file"] = "my-composed-plot.png"
+}
+
+local final_options = merge_tables(base_style(), plot_specific_opts)
+local final_dataset = merge_tables(scatter_plot_style(), {data = my_data})
+
+fplot.plot({
+        options = final_options,
+        datasets = {final_dataset}
+})
+
+print("Plot generated at my-composed-plot.png")
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+<span
+    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
+><!----></span>
+</p>
+
+</section>
+
+</main>
+
+
+<nav class="botnavigation"><a href="fplot_wiki.html" class="linkhome" >
+Home</a></nav>
+
+</div><!-- grid -->
+</body>
+</html>

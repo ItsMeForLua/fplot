@@ -1,0 +1,855 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<meta name="generator" content="LaTeX Lwarp package" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>fplot Manual — Troubleshooting Guide</title>
+<link rel="stylesheet" type="text/css" href="lwarp.css" />
+
+<script>
+// Lwarp MathJax emulation code
+//
+// Based on code by Davide P. Cervone.
+// Equation numbering: https://github.com/mathjax/MathJax/issues/2427
+// Starred and ifnextchar macros: https://github.com/mathjax/MathJax/issues/2428
+// \left, \right delimiters: https://github.com/mathjax/MathJax/issues/2535
+//
+// Modified by Brian Dunn to adjust equation numbering and add subequations.
+//
+// LaTeX can use \seteqnumber{subequations?}{section}{number} before each equation.
+// subequations? is 0 usually, 1 if inside subequations.
+// section is a string printed as-is, or empty.
+// number is auto-incremented by MathJax between equations.
+//
+MathJax = {
+    subequations: "0",
+    section: "",
+    loader: {
+         load: ['[tex]/tagformat', '[tex]/textmacros'],
+    },
+    startup: {
+         ready() {
+             //       These would be replaced by import commands if you wanted to make
+             //       a proper extension.
+             const Configuration = MathJax._.input.tex.Configuration.Configuration;
+             const CommandMap = MathJax._.input.tex.SymbolMap.CommandMap;
+             const Macro = MathJax._.input.tex.Symbol.Macro;
+             const TexError = MathJax._.input.tex.TexError.default;
+             const ParseUtil = MathJax._.input.tex.ParseUtil.default;
+             const expandable = MathJax._.util.Options.expandable;
+
+
+             //       Insert the replacement string into the TeX string, and check
+             //       that there haven't been too many maxro substitutions (prevents
+             //       infinite loops).
+             const useArgument = (parser, text) => {
+                 parser.string = ParseUtil.addArgs(parser, text, parser.string.slice(parser.i));
+                 parser.i = 0;
+                 if (++parser.macroCount > parser.configuration.options.maxMacros) {
+                     throw new TexError('MaxMacroSub1',
+                     'MathJax maximum macro substitution count exceeded; ' +
+                     'is there a recursive macro call?');
+                 }
+             }
+
+
+             //       Create the command map for:
+             //          \ifstar, \ifnextchar, \ifblank, \ifstrequal, \gsub, \seteqnumber
+             new CommandMap('Lwarp-macros', {
+                 ifstar: 'IfstarFunction',
+                 ifnextchar: 'IfnextcharFunction',
+                 ifblank: 'IfblankFunction',
+                 ifstrequal: 'IfstrequalFunction',
+                 gsubstitute: 'GsubstituteFunction',
+                 seteqnumber: 'SeteqnumberFunction'
+             }, {
+                 //      This function implements an ifstar macro.
+                 IfstarFunction(parser, name) {
+                     const resultstar = parser.GetArgument(name);
+                     const resultnostar = parser.GetArgument(name);
+                     const star = parser.GetStar();                        // true if there is a *
+                     useArgument(parser, star ? resultstar : resultnostar);
+                 },
+
+
+                 //      This function implements an ifnextchar macro.
+                 IfnextcharFunction(parser, name) {
+                     let whichchar = parser.GetArgument(name);
+                     if (whichchar.match(/^(?:0x[0-9A-F]+|[0-9]+)$/i)) {
+                         // $ syntax highlighting
+                         whichchar = String.fromCodePoint(parseInt(whichchar));
+                     }
+                     const resultnextchar = parser.GetArgument(name);
+                     const resultnotnextchar = parser.GetArgument(name);
+                     const gotchar = (parser.GetNext() === whichchar);
+                     useArgument(parser, gotchar ? resultnextchar : resultnotnextchar);
+                 },
+
+
+                 // This function implements an ifblank macro.
+                 IfblankFunction(parser, name) {
+                     const blankarg = parser.GetArgument(name);
+                     const resultblank = parser.GetArgument(name);
+                     const resultnotblank = parser.GetArgument(name);
+                     const isblank = (blankarg.trim() == "");
+                     useArgument(parser, isblank ? resultblank : resultnotblank);
+                 },
+
+
+                 // This function implements an ifstrequal macro.
+                 IfstrequalFunction(parser, name) {
+                     const strequalfirst = parser.GetArgument(name);
+                     const strequalsecond = parser.GetArgument(name);
+                     const resultequal = parser.GetArgument(name);
+                     const resultnotequal = parser.GetArgument(name);
+                     const isequal = (strequalfirst == strequalsecond);
+                     useArgument(parser, isequal ? resultequal : resultnotequal);
+                 },
+
+
+                 // This function implements a gsub macro.
+                 GsubstituteFunction(parser, name) {
+                     const gsubfirst = parser.GetArgument(name);
+                     const gsubsecond = parser.GetArgument(name);
+                     const gsubthird = parser.GetArgument(name);
+                     let gsubresult=gsubfirst.replace(gsubsecond, gsubthird);
+                     useArgument(parser, gsubresult);
+                 },
+
+
+                 //      This function modifies the equation numbers.
+                 SeteqnumberFunction(parser, name) {
+                         //   Get the macro parameters
+                         const star = parser.GetStar();                       // true if there is a *
+                         const optBrackets = parser.GetBrackets(name);        // contents of optional brackets
+                         const newsubequations = parser.GetArgument(name);       // the subequations argument
+                         const neweqsection = parser.GetArgument(name);       // the eq section argument
+                         const neweqnumber = parser.GetArgument(name);        // the eq number argument
+                         MathJax.config.subequations=newsubequations ;        // a string with boolean meaning
+                         MathJax.config.section=neweqsection ;                // a string with numeric meaning
+                         parser.tags.counter = parser.tags.allCounter = neweqnumber ;
+                 }
+
+
+             });
+
+
+             //       Create the Lwarp-macros package
+             Configuration.create('Lwarp-macros', {
+                 handler: {macro: ['Lwarp-macros']}
+             });
+
+
+             MathJax.startup.defaultReady();
+
+
+             // For forward references:
+             MathJax.startup.input[0].preFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         MathJax.config.subequations = math.inputData.recompile.subequations;
+                         MathJax.config.section = math.inputData.recompile.section;
+                 }
+             });
+             MathJax.startup.input[0].postFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         math.inputData.recompile.subequations = MathJax.config.subequations;
+                         math.inputData.recompile.section = MathJax.config.section;
+                 }
+             });
+
+
+                 // For \left, \right with unicode-math:
+                 const {DelimiterMap} = MathJax._.input.tex.SymbolMap;
+                 const {Symbol} = MathJax._.input.tex.Symbol;
+                 const {MapHandler} = MathJax._.input.tex.MapHandler;
+                 const delimiter = MapHandler.getMap('delimiter');
+                 delimiter.add('\\lBrack', new Symbol('\\lBrack', '\u27E6'));
+                 delimiter.add('\\rBrack', new Symbol('\\rBrack', '\u27E7'));
+                 delimiter.add('\\lAngle', new Symbol('\\lAngle', '\u27EA'));
+                 delimiter.add('\\rAngle', new Symbol('\\rAngle', '\u27EB'));
+                 delimiter.add('\\lbrbrak', new Symbol('\\lbrbrak', '\u2772'));
+                 delimiter.add('\\rbrbrak', new Symbol('\\rbrbrak', '\u2773'));
+                 delimiter.add('\\lbag', new Symbol('\\lbag', '\u27C5'));
+                 delimiter.add('\\rbag', new Symbol('\\rbag', '\u27C6'));
+                 delimiter.add('\\llparenthesis', new Symbol('\\llparenthesis', '\u2987'));
+                 delimiter.add('\\rrparenthesis', new Symbol('\\rrparenthesis', '\u2988'));
+                 delimiter.add('\\llangle', new Symbol('\\llangle', '\u2989'));
+                 delimiter.add('\\rrangle', new Symbol('\\rrangle', '\u298A'));
+                 delimiter.add('\\Lbrbrak', new Symbol('\\Lbrbrak', '\u27EC'));
+                 delimiter.add('\\Rbrbrak', new Symbol('\\Rbrbrak', '\u27ED'));
+                 delimiter.add('\\lBrace', new Symbol('\\lBrace', '\u2983'));
+                 delimiter.add('\\rBrace', new Symbol('\\rBrace', '\u2984'));
+                 delimiter.add('\\lParen', new Symbol('\\lParen', '\u2985'));
+                 delimiter.add('\\rParen', new Symbol('\\rParen', '\u2986'));
+                 delimiter.add('\\lbrackubar', new Symbol('\\lbrackubar', '\u298B'));
+                 delimiter.add('\\rbrackubar', new Symbol('\\rbrackubar', '\u298C'));
+                 delimiter.add('\\lbrackultick', new Symbol('\\lbrackultick', '\u298D'));
+                 delimiter.add('\\rbracklrtick', new Symbol('\\rbracklrtick', '\u298E'));
+                 delimiter.add('\\lbracklltick', new Symbol('\\lbracklltick', '\u298F'));
+                 delimiter.add('\\rbrackurtick', new Symbol('\\rbrackurtick', '\u2990'));
+                 delimiter.add('\\langledot', new Symbol('\\langledot', '\u2991'));
+                 delimiter.add('\\rangledot', new Symbol('\\rangledot', '\u2992'));
+                 delimiter.add('\\lparenless', new Symbol('\\lparenless', '\u2993'));
+                 delimiter.add('\\rparengtr', new Symbol('\\rparengtr', '\u2994'));
+                 delimiter.add('\\Lparengtr', new Symbol('\\Lparengtr', '\u2995'));
+                 delimiter.add('\\Rparenless', new Symbol('\\Rparenless', '\u2996'));
+                 delimiter.add('\\lblkbrbrak', new Symbol('\\lblkbrbrak', '\u2997'));
+                 delimiter.add('\\rblkbrbrak', new Symbol('\\rblkbrbrak', '\u2998'));
+                 delimiter.add('\\lvzigzag', new Symbol('\\lvzigzag', '\u29D8'));
+                 delimiter.add('\\rvzigzag', new Symbol('\\rvzigzag', '\u29D9'));
+                 delimiter.add('\\Lvzigzag', new Symbol('\\Lvzigzag', '\u29DA'));
+                 delimiter.add('\\Rvzigzag', new Symbol('\\Rvzigzag', '\u29DB'));
+                 delimiter.add('\\lcurvyangle', new Symbol('\\lcurvyangle', '\u29FC'));
+                 delimiter.add('\\rcurvyangle', new Symbol('\\rcurvyangle', '\u29FD'));
+                 delimiter.add('\\Vvert', new Symbol('\\Vvert', '\u2980'));
+         }       // ready
+    },           // startup
+
+
+    tex: {
+         packages: {'[+]': ['tagformat', 'Lwarp-macros', 'textmacros']},
+         tags: "ams",
+                 tagformat: {
+                         number: function (n) {
+                              if(MathJax.config.subequations==0)
+                                     return(MathJax.config.section + n);
+                              else
+                                     return(MathJax.config.section + String.fromCharCode(96+n));
+                         },
+                 },
+    }
+}
+</script>
+
+
+<script
+         id="MathJax-script"
+         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/stackoverflow-light.min.css">
+<style>.hljs { background: transparent !important; padding: 0 !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lisp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lua.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("pre.programlisting").forEach(el => {
+    const rawText = el.textContent;
+    const code = document.createElement("code");
+    // Auto-detect Bash, Lua, or default to Lisp for Fennel
+    if (rawText.includes("git clone") || rawText.includes("cd ") || rawText.includes("make ") || rawText.trim().startsWith("$")) {
+      code.className = "language-bash";
+    } else if (rawText.includes("function") || rawText.includes("local ") || rawText.includes("require(")) {
+      code.className = "language-lua";
+    } else {
+      code.className = "language-lisp";
+    }
+    code.textContent = rawText;
+    el.innerHTML = "";
+    el.appendChild(code);
+    hljs.highlightElement(code);
+  });
+});
+</script>
+</head>
+<body>
+
+
+<a id="fplot_wiki-autopage-170"></a>
+<div class="pagegrid">
+
+
+<nav class="topnavigation"><a href="fplot_wiki.html" class="linkhome" >
+Home</a></nav>
+<div class="sidetoccontainer">
+
+
+<nav class="sidetoc">
+
+
+<div class="sidetoctitle">
+
+<p>
+<span class="sidetocthetitle">fplot Manual</span>
+</p>
+
+<p>
+Contents
+</p>
+</div>
+
+
+<div class="sidetoccontents">
+
+<p>
+<a href="fplot_wiki.html" class="linkhome" >
+Home</a>
+</p>
+
+<p>
+<a href="Welcome-fplot-Wiki.html#autosec-5" class="tocsection" >
+<span class="sectionnumber">1</span>&#x2003;Welcome to the fplot Wiki!</a>
+</p>
+
+
+<p>
+<a href="Installation.html#autosec-13" class="tocsection" >
+<span class="sectionnumber">2</span>&#x2003;Installation</a>
+</p>
+
+
+<p>
+<a href="Getting-Started-Tutorial.html#autosec-33" class="tocsection" >
+<span class="sectionnumber">3</span>&#x2003;Getting Started Tutorial</a>
+</p>
+
+
+<p>
+<a href="Configuration-Options.html#autosec-56" class="tocsection" >
+<span class="sectionnumber">4</span>&#x2003;Configuration Options</a>
+</p>
+
+
+<p>
+<a href="Dataset-Configuration.html#autosec-73" class="tocsection" >
+<span class="sectionnumber">5</span>&#x2003;Dataset Configuration</a>
+</p>
+
+
+<p>
+<a href="Advanced-Features.html#autosec-93" class="tocsection" >
+<span class="sectionnumber">6</span>&#x2003;Advanced Features</a>
+</p>
+
+
+<p>
+<a href="Examples.html#autosec-131" class="tocsection" >
+<span class="sectionnumber">7</span>&#x2003;Examples</a>
+</p>
+
+
+<p>
+<a href="Biotech-Applications.html#autosec-157" class="tocsection" >
+<span class="sectionnumber">8</span>&#x2003;Biotech Applications</a>
+</p>
+
+
+<p>
+<a href="Troubleshooting-Guide.html#autosec-171" class="tocsection" >
+<span class="sectionnumber">9</span>&#x2003;Troubleshooting Guide</a>
+</p>
+
+
+</div>
+
+</nav>
+
+</div>
+
+
+<main class="bodycontainer">
+
+
+<section class="textbody">
+
+<h1>fplot Manual</h1>
+
+<!--MathJax customizations:-->
+<div data-nosnippet
+    style="display:none"
+>
+
+\(\newcommand{\footnotename}{footnote}\)
+
+\(\def \LWRfootnote {1}\)
+
+\(\newcommand {\footnote }[2][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\newcommand {\footnotemark }[1][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\let \LWRorighspace \hspace \)
+
+\(\renewcommand {\hspace }{\ifstar \LWRorighspace \LWRorighspace }\)
+
+\(\newcommand {\TextOrMath }[2]{#2}\)
+
+\(\newcommand {\mathnormal }[1]{{#1}}\)
+
+\(\newcommand \ensuremath [1]{#1}\)
+
+\(\newcommand {\LWRframebox }[2][]{\fbox {#2}} \newcommand {\framebox }[1][]{\LWRframebox } \)
+
+\(\newcommand {\setlength }[2]{}\)
+
+\(\newcommand {\addtolength }[2]{}\)
+
+\(\newcommand {\setcounter }[2]{}\)
+
+\(\newcommand {\addtocounter }[2]{}\)
+
+\(\newcommand {\arabic }[1]{}\)
+
+\(\newcommand {\number }[1]{}\)
+
+\(\newcommand {\noalign }[1]{\text {#1}\notag \\}\)
+
+\(\newcommand {\cline }[1]{}\)
+
+\(\newcommand {\directlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\luatexdirectlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\protect }{}\)
+
+\(\def \LWRabsorbnumber #1 {}\)
+
+\(\def \LWRabsorbquotenumber &quot;#1 {}\)
+
+\(\newcommand {\LWRabsorboption }[1][]{}\)
+
+\(\newcommand {\LWRabsorbtwooptions }[1][]{\LWRabsorboption }\)
+
+\(\def \mathchar {\ifnextchar &quot;\LWRabsorbquotenumber \LWRabsorbnumber }\)
+
+\(\def \mathcode #1={\mathchar }\)
+
+\(\let \delcode \mathcode \)
+
+\(\let \delimiter \mathchar \)
+
+\(\def \oe {\unicode {x0153}}\)
+
+\(\def \OE {\unicode {x0152}}\)
+
+\(\def \ae {\unicode {x00E6}}\)
+
+\(\def \AE {\unicode {x00C6}}\)
+
+\(\def \aa {\unicode {x00E5}}\)
+
+\(\def \AA {\unicode {x00C5}}\)
+
+\(\def \o {\unicode {x00F8}}\)
+
+\(\def \O {\unicode {x00D8}}\)
+
+\(\def \l {\unicode {x0142}}\)
+
+\(\def \L {\unicode {x0141}}\)
+
+\(\def \ss {\unicode {x00DF}}\)
+
+\(\def \SS {\unicode {x1E9E}}\)
+
+\(\def \dag {\unicode {x2020}}\)
+
+\(\def \ddag {\unicode {x2021}}\)
+
+\(\def \P {\unicode {x00B6}}\)
+
+\(\def \copyright {\unicode {x00A9}}\)
+
+\(\def \pounds {\unicode {x00A3}}\)
+
+\(\let \LWRref \ref \)
+
+\(\renewcommand {\ref }{\ifstar \LWRref \LWRref }\)
+
+\( \newcommand {\multicolumn }[3]{#3}\)
+
+\(\require {textcomp}\)
+
+\(\newcommand {\intertext }[1]{\text {#1}\notag \\}\)
+
+\(\let \Hat \hat \)
+
+\(\let \Check \check \)
+
+\(\let \Tilde \tilde \)
+
+\(\let \Acute \acute \)
+
+\(\let \Grave \grave \)
+
+\(\let \Dot \dot \)
+
+\(\let \Ddot \ddot \)
+
+\(\let \Breve \breve \)
+
+\(\let \Bar \bar \)
+
+\(\let \Vec \vec \)
+
+\(\newcommand {\toprule }[1][]{\hline }\)
+
+\(\let \midrule \toprule \)
+
+\(\let \bottomrule \toprule \)
+
+\(\def \LWRbooktabscmidruleparen (#1)#2{}\)
+
+\(\newcommand {\LWRbooktabscmidrulenoparen }[1]{}\)
+
+\(\newcommand {\cmidrule }[1][]{\ifnextchar (\LWRbooktabscmidruleparen \LWRbooktabscmidrulenoparen }\)
+
+\(\newcommand {\morecmidrules }{}\)
+
+\(\newcommand {\specialrule }[3]{\hline }\)
+
+\(\newcommand {\addlinespace }[1][]{}\)
+
+</div>
+
+<!--
+...... section Troubleshooting Guide ......
+-->
+<h4 id="autosec-171"><span class="sectionnumber">9&#x2003;</span>Troubleshooting Guide</h4>
+<a id="fplot_wiki-autopage-171"></a>
+<a id="fplot_wiki-autofile-9"></a>
+
+<p>
+This guide provides solutions to common problems you might encounter when using <kbd>fplot</kbd> in different environments.
+</p>
+<!--
+...... subsection General Issues ......
+-->
+<h5 id="autosec-172"><span class="sectionnumber">9.1&#x2003;</span>General Issues</h5>
+<a id="fplot_wiki-autopage-172"></a>
+<!--
+...... subsubsection Problem: gnuplot not found or command fails. ......
+-->
+<h6 id="autosec-173">Problem: <kbd>gnuplot</kbd> not found or command fails.</h6>
+<a id="fplot_wiki-autopage-173"></a>
+
+
+<p>
+When you run an <kbd>fplot</kbd> script, and you see an error like <kbd>sh: gnuplot: command not found</kbd> or a non-zero exit code.
+</p>
+
+<p>
+<b>Solution:</b>
+</p>
+
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">1.</span> <b>Verify <kbd>gnuplot</kbd> Installation:</b> Make sure <kbd>gnuplot</kbd> is installed on your system. See the <a
+href="https://www.google.com/search?q=https://github.com/your-username/fplot/wiki/Installation" target="_blank" >Installation</a> guide.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">2.</span> <b>Check System <kbd>PATH</kbd>:</b> The <kbd>gnuplot</kbd> executable must be in your system’s <kbd>PATH</kbd>. You can check this by opening a terminal and typing
+<kbd>gnuplot --version</kbd>. If it’s not found, you need to add its location to your <kbd>PATH</kbd> environment variable.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">3.</span> <b>Hardcode the Path:</b> As a last resort, you can edit your local <kbd>fplot.fnl</kbd> (or <kbd>fplot.lua</kbd>) file and change the <kbd>gnuplot-executable</kbd> variable
+to the full, absolute path of the <kbd>gnuplot</kbd> executable on your system.
+</p>
+</li>
+</ul>
+<!--
+...... subsubsection Problem: The plot window appears and immediately closes. ......
+-->
+<h6 id="autosec-174">Problem: The plot window appears and immediately closes.</h6>
+<a id="fplot_wiki-autopage-174"></a>
+
+
+<p>
+<b>Solution:</b>
+</p>
+
+<p>
+This typically happens when gnuplot is not run in ”persistent” mode. fplot automatically handles this by adding the -p flag or a pause mouse close command when it’s not saving to a file. If you are running gnuplot scripts
+manually, make sure to use the -p flag: <kbd>gnuplot -p your_script.gp</kbd>.
+</p>
+<!--
+...... subsection MSYS2 (on Windows) ......
+-->
+<h5 id="autosec-175"><span class="sectionnumber">9.2&#x2003;</span>MSYS2 (on Windows)</h5>
+<a id="fplot_wiki-autopage-175"></a>
+
+
+<p>
+The MSYS2 environment can be tricky because of how it handles file paths.
+</p>
+<!--
+...... subsubsection Problem: fplot fails with errors like "Can't open script file" or "Cannot find data file". ......
+-->
+<h6 id="autosec-176">Problem: <kbd>fplot</kbd> fails with errors like ”Can’t open script file” or ”Cannot find data file”.</h6>
+<a id="fplot_wiki-autopage-176"></a>
+
+
+<p>
+This is the most common issue on MSYS2 and is caused by <b>path mangling</b>. MSYS2 automatically converts POSIX-style paths (e.g., <kbd>/c/Users/Me</kbd>) to Windows-style paths (<kbd>C:\Users\Me</kbd>) when
+calling native Windows programs like <kbd>gnuplot</kbd>. This can corrupt the paths to the temporary script and data files that <kbd>fplot</kbd> creates.
+</p>
+
+<p>
+<b>Solution 1: Disable Path Mangling (Recommended)</b>
+</p>
+
+<p>
+You can tell MSYS2 not to convert paths by setting an environment variable before running your script.
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+# In your MSYS2 terminal
+export MSYS2_ARG_CONV_EXCL="*"
+fennel your_plot_script.fnl
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+To make this permanent, add <kbd>export MSYS2_ARG_CONV_EXCL="*"</kbd> to your <kbd>~/.bashrc</kbd> or <kbd>~/.bash_profile</kbd> file in your MSYS2 home directory.
+</p>
+
+<p>
+<b>Solution 2: Use the MinGW <kbd>gnuplot</kbd> Package</b>
+</p>
+
+<p>
+Within your MSYS2 environment, it’s best to use the <kbd>gnuplot</kbd> package from the MinGW repositories, as it’s a native Windows build that integrates well with the environment. You can install it using
+<kbd>pacman</kbd>:
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+pacman -S mingw-w64-x86_64-gnuplot
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+This version is generally more reliable for GUI applications than a purely POSIX-emulated build. However, even with this version, the path mangling described in Solution 1 is often still a problem, so disabling it is the most robust
+fix.
+</p>
+<!--
+...... subsection WSL2 (Windows Subsystem for Linux) ......
+-->
+<h5 id="autosec-179"><span class="sectionnumber">9.3&#x2003;</span>WSL2 (Windows Subsystem for Linux)</h5>
+<a id="fplot_wiki-autopage-179"></a>
+
+
+<p>
+WSL2 runs a full Linux kernel. On modern Windows 10 and 11, the <b>WSLg</b> feature provides built-in support for Linux GUI applications, so they should work out of the box.
+</p>
+
+<p>
+<b>Problem:</b> The script runs, but no plot window appears. You might see an error like ”cannot open display” or ”Gnuplot terminal type set to ’unknown’”.
+</p>
+
+<p>
+<b>Solution for Modern Windows (with WSLg):</b>
+</p>
+
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">1.</span> <b>Ensure WSL is Up-to-Date:</b> Open a Windows PowerShell or Command Prompt and run <kbd>wsl --update</kbd>. This will ensure you have the latest version with WSLg.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">2.</span> <b>Install a GUI-enabled <kbd>gnuplot</kbd>:</b> Your Linux distribution needs a version of <kbd>gnuplot</kbd> that can create a graphical window.
+</p>
+<div class="figurecaption">
+</div>
+<pre class="programlisting">
+# On Debian/Ubuntu
+sudo apt-get update
+sudo apt-get install gnuplot-x11
+
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<p>
+This should be all you need. When you run your <kbd>fplot</kbd> script from WSL2, the plot window should appear on your Windows desktop automatically(appearance is slow).
+</p>
+</li>
+</ul>
+
+<p>
+<b>Solution for Older Windows Versions (without WSLg):</b>
+</p>
+
+<p>
+If you are on an older build of Windows that doesn’t support WSLg, you will need to manually install an X server on Windows.
+</p>
+
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">1.</span> <b>Install an X Server on Windows:</b> Download and install a free X server like <a href="https://sourceforge.net/projects/vcxsrv/" target="_blank" >VcXsrv</a> on your
+Windows machine.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">2.</span> <b>Launch the X Server:</b> Launch VcXsrv and choose ”Multiple windows”, ”Display number -1”, and on the final page, check ”Disable access control”.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">3.</span> <b>Configure the <kbd>DISPLAY</kbd> Variable in WSL2:</b> Your Linux environment needs to know where the display is. Add the following line to your <kbd>~/.bashrc</kbd> file
+in your WSL2 home directory:
+</p>
+<div class="figurecaption">
+</div>
+<pre class="programlisting">
+export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk &apos;{print $2; exit;}&apos;):0.0
+
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+</li>
+<li>
+
+<p>
+<span class="listmarker">4.</span> <b>Reload Your Shell:</b> Close and reopen your WSL2 terminal, or run <kbd>source ~/.bashrc</kbd>. After this, GUI applications from WSL2 should appear on your desktop.
+</p>
+</li>
+</ul>
+<!--
+...... subsection Native Linux / macOS ......
+-->
+<h5 id="autosec-182"><span class="sectionnumber">9.4&#x2003;</span>Native Linux / macOS</h5>
+<a id="fplot_wiki-autopage-182"></a>
+
+
+<p>
+<kbd>fplot</kbd> is most at home on these systems and issues are rare.
+</p>
+<!--
+...... subsubsection Problem: fplot complains about a missing terminal type (e.g., "Terminal type set to 'unknown'"). ......
+-->
+<h6 id="autosec-183">Problem: <kbd>fplot</kbd> complains about a missing terminal type (e.g., ”Terminal type set to ’unknown’”).</h6>
+<a id="fplot_wiki-autopage-183"></a>
+
+
+<p>
+<b>Solution:</b>
+</p>
+
+<p>
+Your gnuplot installation may be missing support for interactive terminals. When you installed gnuplot, you may have gotten a ”core” or ”nogui” version. Re-install it and ensure you get a version with qt or x11 support.
+</p>
+
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> <b>Debian/Ubuntu:</b> <kbd>sudo apt-get install gnuplot-x11</kbd> or <kbd>sudo apt-get install gnuplot-qt</kbd>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> <b>Arch Linux:</b> The default <kbd>gnuplot</kbd> package should be sufficient.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> <b>macOS (Homebrew):</b> <kbd>brew install gnuplot</kbd> should install a version with the <kbd>qt</kbd> terminal.
+</p>
+</li>
+</ul>
+
+<p>
+You can check which terminals your <kbd>gnuplot</kbd> supports by running <kbd>gnuplot -e "show terminal"</kbd>.
+</p>
+<!--
+...... subsection A Note on Gnuplot Terminals (GUI Backends) ......
+-->
+<h5 id="autosec-184"><span class="sectionnumber">9.5&#x2003;</span>A Note on Gnuplot Terminals (GUI Backends)</h5>
+<a id="fplot_wiki-autopage-184"></a>
+<!--
+...... subsubsection Problem: A plot window appears, but it's buggy, slow, or doesn't appear at all, even though gnuplot is installed correctly. ......
+-->
+<h6 id="autosec-185">Problem: A plot window appears, but it’s buggy, slow, or doesn’t appear at all, even though <kbd>gnuplot</kbd> is installed correctly.</h6>
+<a id="fplot_wiki-autopage-185"></a>
+
+
+<p>
+<b>Solution:</b>
+</p>
+
+<p>
+gnuplot uses different internal engines, called ”terminals,” to draw its interactive plot windows. The most common ones are wxt (the default on many systems), qt, and x11. Sometimes, the default terminal may have issues with
+your specific desktop environment or system configuration, especially in complex setups like MSYS2.
+</p>
+
+<p>
+If you suspect this is the issue, you can force <kbd>fplot</kbd> to use a different terminal by setting the <kbd>:output-type</kbd> option in your plot configuration.
+</p>
+
+<p>
+<b>Example (forcing the <kbd>qt</kbd> terminal):</b>
+</p>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(fplot.plot
+{:options {:title "My Plot"
+                :output-type "qt"} ; &lt;-- Force the qt terminal
+        :datasets [;...
+        ]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+This is a powerful troubleshooting step. If the default <kbd>wxt</kbd> terminal fails, try <kbd>qt</kbd>. If <kbd>qt</kbd> fails, try <kbd>x11</kbd> (on Linux). Make sure you have the necessary support libraries installed for
+the terminal you want to use (e.g., the <kbd>gnuplot-qt</kbd> package on Debian/Ubuntu for the <kbd>qt</kbd> terminal).
+</p>
+
+<a id="fplot_wiki-autofile-last"></a>
+</section>
+
+</main>
+
+
+<nav class="botnavigation"><a href="fplot_wiki.html" class="linkhome" >
+Home</a></nav>
+
+</div><!-- grid -->
+</body>
+</html>

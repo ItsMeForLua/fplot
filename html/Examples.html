@@ -1,0 +1,938 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<meta name="generator" content="LaTeX Lwarp package" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>fplot Manual — Examples</title>
+<link rel="stylesheet" type="text/css" href="lwarp.css" />
+
+<script>
+// Lwarp MathJax emulation code
+//
+// Based on code by Davide P. Cervone.
+// Equation numbering: https://github.com/mathjax/MathJax/issues/2427
+// Starred and ifnextchar macros: https://github.com/mathjax/MathJax/issues/2428
+// \left, \right delimiters: https://github.com/mathjax/MathJax/issues/2535
+//
+// Modified by Brian Dunn to adjust equation numbering and add subequations.
+//
+// LaTeX can use \seteqnumber{subequations?}{section}{number} before each equation.
+// subequations? is 0 usually, 1 if inside subequations.
+// section is a string printed as-is, or empty.
+// number is auto-incremented by MathJax between equations.
+//
+MathJax = {
+    subequations: "0",
+    section: "",
+    loader: {
+         load: ['[tex]/tagformat', '[tex]/textmacros'],
+    },
+    startup: {
+         ready() {
+             //       These would be replaced by import commands if you wanted to make
+             //       a proper extension.
+             const Configuration = MathJax._.input.tex.Configuration.Configuration;
+             const CommandMap = MathJax._.input.tex.SymbolMap.CommandMap;
+             const Macro = MathJax._.input.tex.Symbol.Macro;
+             const TexError = MathJax._.input.tex.TexError.default;
+             const ParseUtil = MathJax._.input.tex.ParseUtil.default;
+             const expandable = MathJax._.util.Options.expandable;
+
+
+             //       Insert the replacement string into the TeX string, and check
+             //       that there haven't been too many maxro substitutions (prevents
+             //       infinite loops).
+             const useArgument = (parser, text) => {
+                 parser.string = ParseUtil.addArgs(parser, text, parser.string.slice(parser.i));
+                 parser.i = 0;
+                 if (++parser.macroCount > parser.configuration.options.maxMacros) {
+                     throw new TexError('MaxMacroSub1',
+                     'MathJax maximum macro substitution count exceeded; ' +
+                     'is there a recursive macro call?');
+                 }
+             }
+
+
+             //       Create the command map for:
+             //          \ifstar, \ifnextchar, \ifblank, \ifstrequal, \gsub, \seteqnumber
+             new CommandMap('Lwarp-macros', {
+                 ifstar: 'IfstarFunction',
+                 ifnextchar: 'IfnextcharFunction',
+                 ifblank: 'IfblankFunction',
+                 ifstrequal: 'IfstrequalFunction',
+                 gsubstitute: 'GsubstituteFunction',
+                 seteqnumber: 'SeteqnumberFunction'
+             }, {
+                 //      This function implements an ifstar macro.
+                 IfstarFunction(parser, name) {
+                     const resultstar = parser.GetArgument(name);
+                     const resultnostar = parser.GetArgument(name);
+                     const star = parser.GetStar();                        // true if there is a *
+                     useArgument(parser, star ? resultstar : resultnostar);
+                 },
+
+
+                 //      This function implements an ifnextchar macro.
+                 IfnextcharFunction(parser, name) {
+                     let whichchar = parser.GetArgument(name);
+                     if (whichchar.match(/^(?:0x[0-9A-F]+|[0-9]+)$/i)) {
+                         // $ syntax highlighting
+                         whichchar = String.fromCodePoint(parseInt(whichchar));
+                     }
+                     const resultnextchar = parser.GetArgument(name);
+                     const resultnotnextchar = parser.GetArgument(name);
+                     const gotchar = (parser.GetNext() === whichchar);
+                     useArgument(parser, gotchar ? resultnextchar : resultnotnextchar);
+                 },
+
+
+                 // This function implements an ifblank macro.
+                 IfblankFunction(parser, name) {
+                     const blankarg = parser.GetArgument(name);
+                     const resultblank = parser.GetArgument(name);
+                     const resultnotblank = parser.GetArgument(name);
+                     const isblank = (blankarg.trim() == "");
+                     useArgument(parser, isblank ? resultblank : resultnotblank);
+                 },
+
+
+                 // This function implements an ifstrequal macro.
+                 IfstrequalFunction(parser, name) {
+                     const strequalfirst = parser.GetArgument(name);
+                     const strequalsecond = parser.GetArgument(name);
+                     const resultequal = parser.GetArgument(name);
+                     const resultnotequal = parser.GetArgument(name);
+                     const isequal = (strequalfirst == strequalsecond);
+                     useArgument(parser, isequal ? resultequal : resultnotequal);
+                 },
+
+
+                 // This function implements a gsub macro.
+                 GsubstituteFunction(parser, name) {
+                     const gsubfirst = parser.GetArgument(name);
+                     const gsubsecond = parser.GetArgument(name);
+                     const gsubthird = parser.GetArgument(name);
+                     let gsubresult=gsubfirst.replace(gsubsecond, gsubthird);
+                     useArgument(parser, gsubresult);
+                 },
+
+
+                 //      This function modifies the equation numbers.
+                 SeteqnumberFunction(parser, name) {
+                         //   Get the macro parameters
+                         const star = parser.GetStar();                       // true if there is a *
+                         const optBrackets = parser.GetBrackets(name);        // contents of optional brackets
+                         const newsubequations = parser.GetArgument(name);       // the subequations argument
+                         const neweqsection = parser.GetArgument(name);       // the eq section argument
+                         const neweqnumber = parser.GetArgument(name);        // the eq number argument
+                         MathJax.config.subequations=newsubequations ;        // a string with boolean meaning
+                         MathJax.config.section=neweqsection ;                // a string with numeric meaning
+                         parser.tags.counter = parser.tags.allCounter = neweqnumber ;
+                 }
+
+
+             });
+
+
+             //       Create the Lwarp-macros package
+             Configuration.create('Lwarp-macros', {
+                 handler: {macro: ['Lwarp-macros']}
+             });
+
+
+             MathJax.startup.defaultReady();
+
+
+             // For forward references:
+             MathJax.startup.input[0].preFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         MathJax.config.subequations = math.inputData.recompile.subequations;
+                         MathJax.config.section = math.inputData.recompile.section;
+                 }
+             });
+             MathJax.startup.input[0].postFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         math.inputData.recompile.subequations = MathJax.config.subequations;
+                         math.inputData.recompile.section = MathJax.config.section;
+                 }
+             });
+
+
+                 // For \left, \right with unicode-math:
+                 const {DelimiterMap} = MathJax._.input.tex.SymbolMap;
+                 const {Symbol} = MathJax._.input.tex.Symbol;
+                 const {MapHandler} = MathJax._.input.tex.MapHandler;
+                 const delimiter = MapHandler.getMap('delimiter');
+                 delimiter.add('\\lBrack', new Symbol('\\lBrack', '\u27E6'));
+                 delimiter.add('\\rBrack', new Symbol('\\rBrack', '\u27E7'));
+                 delimiter.add('\\lAngle', new Symbol('\\lAngle', '\u27EA'));
+                 delimiter.add('\\rAngle', new Symbol('\\rAngle', '\u27EB'));
+                 delimiter.add('\\lbrbrak', new Symbol('\\lbrbrak', '\u2772'));
+                 delimiter.add('\\rbrbrak', new Symbol('\\rbrbrak', '\u2773'));
+                 delimiter.add('\\lbag', new Symbol('\\lbag', '\u27C5'));
+                 delimiter.add('\\rbag', new Symbol('\\rbag', '\u27C6'));
+                 delimiter.add('\\llparenthesis', new Symbol('\\llparenthesis', '\u2987'));
+                 delimiter.add('\\rrparenthesis', new Symbol('\\rrparenthesis', '\u2988'));
+                 delimiter.add('\\llangle', new Symbol('\\llangle', '\u2989'));
+                 delimiter.add('\\rrangle', new Symbol('\\rrangle', '\u298A'));
+                 delimiter.add('\\Lbrbrak', new Symbol('\\Lbrbrak', '\u27EC'));
+                 delimiter.add('\\Rbrbrak', new Symbol('\\Rbrbrak', '\u27ED'));
+                 delimiter.add('\\lBrace', new Symbol('\\lBrace', '\u2983'));
+                 delimiter.add('\\rBrace', new Symbol('\\rBrace', '\u2984'));
+                 delimiter.add('\\lParen', new Symbol('\\lParen', '\u2985'));
+                 delimiter.add('\\rParen', new Symbol('\\rParen', '\u2986'));
+                 delimiter.add('\\lbrackubar', new Symbol('\\lbrackubar', '\u298B'));
+                 delimiter.add('\\rbrackubar', new Symbol('\\rbrackubar', '\u298C'));
+                 delimiter.add('\\lbrackultick', new Symbol('\\lbrackultick', '\u298D'));
+                 delimiter.add('\\rbracklrtick', new Symbol('\\rbracklrtick', '\u298E'));
+                 delimiter.add('\\lbracklltick', new Symbol('\\lbracklltick', '\u298F'));
+                 delimiter.add('\\rbrackurtick', new Symbol('\\rbrackurtick', '\u2990'));
+                 delimiter.add('\\langledot', new Symbol('\\langledot', '\u2991'));
+                 delimiter.add('\\rangledot', new Symbol('\\rangledot', '\u2992'));
+                 delimiter.add('\\lparenless', new Symbol('\\lparenless', '\u2993'));
+                 delimiter.add('\\rparengtr', new Symbol('\\rparengtr', '\u2994'));
+                 delimiter.add('\\Lparengtr', new Symbol('\\Lparengtr', '\u2995'));
+                 delimiter.add('\\Rparenless', new Symbol('\\Rparenless', '\u2996'));
+                 delimiter.add('\\lblkbrbrak', new Symbol('\\lblkbrbrak', '\u2997'));
+                 delimiter.add('\\rblkbrbrak', new Symbol('\\rblkbrbrak', '\u2998'));
+                 delimiter.add('\\lvzigzag', new Symbol('\\lvzigzag', '\u29D8'));
+                 delimiter.add('\\rvzigzag', new Symbol('\\rvzigzag', '\u29D9'));
+                 delimiter.add('\\Lvzigzag', new Symbol('\\Lvzigzag', '\u29DA'));
+                 delimiter.add('\\Rvzigzag', new Symbol('\\Rvzigzag', '\u29DB'));
+                 delimiter.add('\\lcurvyangle', new Symbol('\\lcurvyangle', '\u29FC'));
+                 delimiter.add('\\rcurvyangle', new Symbol('\\rcurvyangle', '\u29FD'));
+                 delimiter.add('\\Vvert', new Symbol('\\Vvert', '\u2980'));
+         }       // ready
+    },           // startup
+
+
+    tex: {
+         packages: {'[+]': ['tagformat', 'Lwarp-macros', 'textmacros']},
+         tags: "ams",
+                 tagformat: {
+                         number: function (n) {
+                              if(MathJax.config.subequations==0)
+                                     return(MathJax.config.section + n);
+                              else
+                                     return(MathJax.config.section + String.fromCharCode(96+n));
+                         },
+                 },
+    }
+}
+</script>
+
+
+<script
+         id="MathJax-script"
+         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/stackoverflow-light.min.css">
+<style>.hljs { background: transparent !important; padding: 0 !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lisp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lua.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("pre.programlisting").forEach(el => {
+    const rawText = el.textContent;
+    const code = document.createElement("code");
+    // Auto-detect Bash, Lua, or default to Lisp for Fennel
+    if (rawText.includes("git clone") || rawText.includes("cd ") || rawText.includes("make ") || rawText.trim().startsWith("$")) {
+      code.className = "language-bash";
+    } else if (rawText.includes("function") || rawText.includes("local ") || rawText.includes("require(")) {
+      code.className = "language-lua";
+    } else {
+      code.className = "language-lisp";
+    }
+    code.textContent = rawText;
+    el.innerHTML = "";
+    el.appendChild(code);
+    hljs.highlightElement(code);
+  });
+});
+</script>
+</head>
+<body>
+
+
+<a id="fplot_wiki-autopage-130"></a>
+<div class="pagegrid">
+
+
+<nav class="topnavigation"><a href="fplot_wiki.html" class="linkhome" >
+Home</a></nav>
+<div class="sidetoccontainer">
+
+
+<nav class="sidetoc">
+
+
+<div class="sidetoctitle">
+
+<p>
+<span class="sidetocthetitle">fplot Manual</span>
+</p>
+
+<p>
+Contents
+</p>
+</div>
+
+
+<div class="sidetoccontents">
+
+<p>
+<a href="fplot_wiki.html" class="linkhome" >
+Home</a>
+</p>
+
+<p>
+<a href="Welcome-fplot-Wiki.html#autosec-5" class="tocsection" >
+<span class="sectionnumber">1</span>&#x2003;Welcome to the fplot Wiki!</a>
+</p>
+
+
+<p>
+<a href="Installation.html#autosec-13" class="tocsection" >
+<span class="sectionnumber">2</span>&#x2003;Installation</a>
+</p>
+
+
+<p>
+<a href="Getting-Started-Tutorial.html#autosec-33" class="tocsection" >
+<span class="sectionnumber">3</span>&#x2003;Getting Started Tutorial</a>
+</p>
+
+
+<p>
+<a href="Configuration-Options.html#autosec-56" class="tocsection" >
+<span class="sectionnumber">4</span>&#x2003;Configuration Options</a>
+</p>
+
+
+<p>
+<a href="Dataset-Configuration.html#autosec-73" class="tocsection" >
+<span class="sectionnumber">5</span>&#x2003;Dataset Configuration</a>
+</p>
+
+
+<p>
+<a href="Advanced-Features.html#autosec-93" class="tocsection" >
+<span class="sectionnumber">6</span>&#x2003;Advanced Features</a>
+</p>
+
+
+<p>
+<a href="Examples.html#autosec-131" class="tocsection" >
+<span class="sectionnumber">7</span>&#x2003;Examples</a>
+</p>
+
+
+<p>
+<a href="Biotech-Applications.html#autosec-157" class="tocsection" >
+<span class="sectionnumber">8</span>&#x2003;Biotech Applications</a>
+</p>
+
+
+<p>
+<a href="Troubleshooting-Guide.html#autosec-171" class="tocsection" >
+<span class="sectionnumber">9</span>&#x2003;Troubleshooting Guide</a>
+</p>
+
+
+</div>
+
+</nav>
+
+</div>
+
+
+<main class="bodycontainer">
+
+
+<section class="textbody">
+
+<h1>fplot Manual</h1>
+
+<!--MathJax customizations:-->
+<div data-nosnippet
+    style="display:none"
+>
+
+\(\newcommand{\footnotename}{footnote}\)
+
+\(\def \LWRfootnote {1}\)
+
+\(\newcommand {\footnote }[2][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\newcommand {\footnotemark }[1][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\let \LWRorighspace \hspace \)
+
+\(\renewcommand {\hspace }{\ifstar \LWRorighspace \LWRorighspace }\)
+
+\(\newcommand {\TextOrMath }[2]{#2}\)
+
+\(\newcommand {\mathnormal }[1]{{#1}}\)
+
+\(\newcommand \ensuremath [1]{#1}\)
+
+\(\newcommand {\LWRframebox }[2][]{\fbox {#2}} \newcommand {\framebox }[1][]{\LWRframebox } \)
+
+\(\newcommand {\setlength }[2]{}\)
+
+\(\newcommand {\addtolength }[2]{}\)
+
+\(\newcommand {\setcounter }[2]{}\)
+
+\(\newcommand {\addtocounter }[2]{}\)
+
+\(\newcommand {\arabic }[1]{}\)
+
+\(\newcommand {\number }[1]{}\)
+
+\(\newcommand {\noalign }[1]{\text {#1}\notag \\}\)
+
+\(\newcommand {\cline }[1]{}\)
+
+\(\newcommand {\directlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\luatexdirectlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\protect }{}\)
+
+\(\def \LWRabsorbnumber #1 {}\)
+
+\(\def \LWRabsorbquotenumber &quot;#1 {}\)
+
+\(\newcommand {\LWRabsorboption }[1][]{}\)
+
+\(\newcommand {\LWRabsorbtwooptions }[1][]{\LWRabsorboption }\)
+
+\(\def \mathchar {\ifnextchar &quot;\LWRabsorbquotenumber \LWRabsorbnumber }\)
+
+\(\def \mathcode #1={\mathchar }\)
+
+\(\let \delcode \mathcode \)
+
+\(\let \delimiter \mathchar \)
+
+\(\def \oe {\unicode {x0153}}\)
+
+\(\def \OE {\unicode {x0152}}\)
+
+\(\def \ae {\unicode {x00E6}}\)
+
+\(\def \AE {\unicode {x00C6}}\)
+
+\(\def \aa {\unicode {x00E5}}\)
+
+\(\def \AA {\unicode {x00C5}}\)
+
+\(\def \o {\unicode {x00F8}}\)
+
+\(\def \O {\unicode {x00D8}}\)
+
+\(\def \l {\unicode {x0142}}\)
+
+\(\def \L {\unicode {x0141}}\)
+
+\(\def \ss {\unicode {x00DF}}\)
+
+\(\def \SS {\unicode {x1E9E}}\)
+
+\(\def \dag {\unicode {x2020}}\)
+
+\(\def \ddag {\unicode {x2021}}\)
+
+\(\def \P {\unicode {x00B6}}\)
+
+\(\def \copyright {\unicode {x00A9}}\)
+
+\(\def \pounds {\unicode {x00A3}}\)
+
+\(\let \LWRref \ref \)
+
+\(\renewcommand {\ref }{\ifstar \LWRref \LWRref }\)
+
+\( \newcommand {\multicolumn }[3]{#3}\)
+
+\(\require {textcomp}\)
+
+\(\newcommand {\intertext }[1]{\text {#1}\notag \\}\)
+
+\(\let \Hat \hat \)
+
+\(\let \Check \check \)
+
+\(\let \Tilde \tilde \)
+
+\(\let \Acute \acute \)
+
+\(\let \Grave \grave \)
+
+\(\let \Dot \dot \)
+
+\(\let \Ddot \ddot \)
+
+\(\let \Breve \breve \)
+
+\(\let \Bar \bar \)
+
+\(\let \Vec \vec \)
+
+\(\newcommand {\toprule }[1][]{\hline }\)
+
+\(\let \midrule \toprule \)
+
+\(\let \bottomrule \toprule \)
+
+\(\def \LWRbooktabscmidruleparen (#1)#2{}\)
+
+\(\newcommand {\LWRbooktabscmidrulenoparen }[1]{}\)
+
+\(\newcommand {\cmidrule }[1][]{\ifnextchar (\LWRbooktabscmidruleparen \LWRbooktabscmidrulenoparen }\)
+
+\(\newcommand {\morecmidrules }{}\)
+
+\(\newcommand {\specialrule }[3]{\hline }\)
+
+\(\newcommand {\addlinespace }[1][]{}\)
+
+</div>
+
+<!--
+...... section Examples ......
+-->
+<h4 id="autosec-131"><span class="sectionnumber">7&#x2003;</span>Examples</h4>
+<a id="fplot_wiki-autopage-131"></a>
+<a id="fplot_wiki-autofile-7"></a>
+
+<p>
+This page provides a gallery of examples to showcase the kinds of plots you can create with <kbd>fplot</kbd>. Each example includes the code in both Fennel and Lua, along with the resulting plot.
+</p>
+<!--
+...... subsection 1. Line and Point Plot ......
+-->
+<h5 id="autosec-132"><span class="sectionnumber">7.1&#x2003;</span>1. Line and Point Plot</h5>
+<a id="fplot_wiki-autopage-132"></a>
+
+
+<p>
+A standard plot combining smooth lines and distinct data points.
+</p>
+<!--
+...... subsubsection Fennel ......
+-->
+<h6 id="autosec-133">Fennel</h6>
+<a id="fplot_wiki-autopage-133"></a>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(local fplot (require :fplot))
+
+(local data1 [])
+(for [i 0 50]
+(let [x (* i 0.2)]
+(table.insert data1 [x (* (math.exp (* -0.1 x)) (math.cos x))])))
+
+(local data2 [[1 0.5] [3 0.1] [5 -0.2] [7 -0.1] [9 0.05]])
+
+(fplot.plot
+{:options {:title "Damped Oscillation with Data Points"
+                :x-label "Time"
+                :y-label "Amplitude"
+                :grid true
+                :key {:position "top right"}}
+        :datasets [{:title "Model"
+                :style "lines"
+                :color "blue"
+                :data data1}
+        {:title "Measurements"
+                :style "points"
+                :color "red"
+                :pointtype 7
+                :data data2}]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... subsubsection Lua ......
+-->
+<h6 id="autosec-135">Lua</h6>
+<a id="fplot_wiki-autopage-135"></a>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+require("fennel").install()
+local fplot = require("fplot")
+
+local data1 = {}
+for i = 0, 50 do
+local x = i * 0.2
+table.insert(data1, {x, math.exp(-0.1 * x) * math.cos(x)})
+end
+
+local data2 = {{1, 0.5}, {3, 0.1}, {5, -0.2}, {7, -0.1}, {9, 0.05}}
+
+fplot.plot({
+        options = {
+                title = "Damped Oscillation with Data Points",
+                x_label = "Time",
+                y_label = "Amplitude",
+                grid = true,
+                key = {position = "top right"}
+        },
+        datasets = {
+                {
+                        title = "Model",
+                        style = "lines",
+                        color = "blue",
+                        data = data1
+                },
+                {
+                        title = "Measurements",
+                        style = "points",
+                        color = "red",
+                        pointtype = 7,
+                        data = data2
+                }
+        }
+})
+
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+<i>(The resulting plot generated by fplot)</i>
+</p>
+<div class="center">
+
+<p>
+<span
+    class="fbox"
+    style="display:inline-block ; border:1pt solid #000000; padding:3pt ; color:#000000"
+><i>[Image: P8.ex.Plot1]</i></span>
+</p>
+</div>
+
+<p>
+<span
+    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
+><!----></span>
+</p>
+<!--
+...... subsection 2. Bar Chart / Histogram ......
+-->
+<h5 id="autosec-138"><span class="sectionnumber">7.2&#x2003;</span>2. Bar Chart / Histogram</h5>
+<a id="fplot_wiki-autopage-138"></a>
+
+
+<p>
+Creating a bar chart using the <kbd>boxes</kbd> style, which is great for categorical data.
+</p>
+<!--
+...... subsubsection Fennel ......
+-->
+<h6 id="autosec-139">Fennel</h6>
+<a id="fplot_wiki-autopage-139"></a>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(local fplot (require :fplot))
+
+(fplot.plot
+{:options {:title "Annual Production by Factory"
+                :y-label "Units Produced"
+                :x-range [0.5 4.5]
+                :y-range [0 50000]
+                :xtics [["North" 1] ["South" 2] ["East" 3] ["West" 4]]
+                :extra-opts ["set style fill solid 0.8"]}
+        :datasets [{:title "Production"
+                :style "boxes"
+                :data [[1 42000] [2 35000] [3 48000] [4 29000]]}]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... subsubsection Lua ......
+-->
+<h6 id="autosec-141">Lua</h6>
+<a id="fplot_wiki-autopage-141"></a>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+require("fennel").install()
+local fplot = require("fplot")
+
+fplot.plot({
+        options = {
+                title = "Annual Production by Factory",
+                y_label = "Units Produced",
+                x_range = {0.5, 4.5},
+                y_range = {0, 50000},
+                xtics = {{"North", 1}, {"South", 2}, {"East", 3}, {"West", 4}},
+                extra_opts = {"set style fill solid 0.8"}
+        },
+        datasets = {
+                {
+                        title = "Production",
+                        style = "boxes",
+                        data = {{1, 42000}, {2, 35000}, {3, 48000}, {4, 29000}}
+                }
+        }
+})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+<i>(The resulting plot generated by fplot)</i>
+</p>
+<div class="center">
+
+<p>
+<span
+    class="fbox"
+    style="display:inline-block ; border:1pt solid #000000; padding:3pt ; color:#000000"
+><i>[Image: P8.ex.Plot2]</i></span>
+</p>
+</div>
+
+<p>
+<span
+    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
+><!----></span>
+</p>
+<!--
+...... subsection 3. 3D Surface Plot ......
+-->
+<h5 id="autosec-144"><span class="sectionnumber">7.3&#x2003;</span>3. 3D Surface Plot</h5>
+<a id="fplot_wiki-autopage-144"></a>
+
+
+<p>
+Using <kbd>fplot.splot</kbd> to visualize three-dimensional data.
+</p>
+<!--
+...... subsubsection Fennel ......
+-->
+<h6 id="autosec-145">Fennel</h6>
+<a id="fplot_wiki-autopage-145"></a>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(local fplot (require :fplot))
+
+(local data [])
+(for [i -20 20]
+(let [x (* i 0.5)
+row []]
+(for [j -20 20]
+(let [y (* j 0.5)
+r (+ (math.sqrt (+ (* x x) (* y y))) 1e-6)
+z (/ (math.sin r) r)]
+(table.insert row [x y z])))
+(table.insert data row)))
+
+(fplot.splot
+{:options {:title "Sinc Function"
+                :z-label "z"
+                :palette "viridis"}
+        :datasets [{:data data
+                :style "pm3d"
+                :title ""}]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... subsubsection Lua ......
+-->
+<h6 id="autosec-147">Lua</h6>
+<a id="fplot_wiki-autopage-147"></a>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+require("fennel").install()
+local fplot = require("fplot")
+
+local data = {}
+for i = -20, 20 do
+local x = i * 0.5
+local row = {}
+for j = -20, 20 do
+local y = j * 0.5
+local r = math.sqrt(x*x + y*y) + 1e-6
+local z = math.sin(r) / r
+table.insert(row, {x, y, z})
+end
+table.insert(data, row)
+end
+
+fplot.splot({
+        options = {
+                title = "Sinc Function",
+                z_label = "z",
+                palette = "viridis"
+        },
+        datasets = {
+                {
+                        data = data,
+                        style = "pm3d",
+                        title = ""
+                }
+        }
+})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+<i>(The resulting plot generated by fplot)</i>
+</p>
+<div class="center">
+
+<p>
+<span
+    class="fbox"
+    style="display:inline-block ; border:1pt solid #000000; padding:3pt ; color:#000000"
+><i>[Image: P8.ex.Plot3]</i></span>
+</p>
+</div>
+
+<p>
+<span
+    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
+><!----></span>
+</p>
+<!--
+...... subsection 4. Logarithmic Scale Plot ......
+-->
+<h5 id="autosec-150"><span class="sectionnumber">7.4&#x2003;</span>4. Logarithmic Scale Plot</h5>
+<a id="fplot_wiki-autopage-150"></a>
+
+
+<p>
+Useful for visualizing data that spans several orders of magnitude.
+</p>
+<!--
+...... subsubsection Fennel ......
+-->
+<h6 id="autosec-151">Fennel</h6>
+<a id="fplot_wiki-autopage-151"></a>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+(local fplot (require :fplot))
+
+(local data [])
+(for [x 1 100]
+(table.insert data [x (* 1000 (math.exp (* -0.1 x)))]))
+
+(fplot.plot
+{:options {:title "Exponential Decay"
+                :x-label "Time"
+                :y-label "Value"
+                :log-scale "y"
+                :grid true}
+        :datasets [{:title "Decay"
+                :style "lines"
+                :data data}]})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+<!--
+...... subsubsection Lua ......
+-->
+<h6 id="autosec-153">Lua</h6>
+<a id="fplot_wiki-autopage-153"></a>
+<div class="figurecaption">
+
+</div>
+<pre class="programlisting">
+require("fennel").install()
+local fplot = require("fplot")
+
+local data = {}
+for x = 1, 100 do
+table.insert(data, {x, 1000 * math.exp(-0.1 * x)})
+end
+
+fplot.plot({
+        options = {
+                title = "Exponential Decay",
+                x_label = "Time",
+                y_label = "Value",
+                log_scale = "y",
+                grid = true
+        },
+        datasets = {
+                {
+                        title = "Decay",
+                        style = "lines",
+                        data = data
+                }
+        }
+})
+
+</pre>
+
+    <div class="figurecaption">
+</div>
+
+<p>
+<i>(The resulting plot generated by fplot)</i>
+</p>
+<div class="center">
+
+<p>
+<span
+    class="fbox"
+    style="display:inline-block ; border:1pt solid #000000; padding:3pt ; color:#000000"
+><i>[Image: P8.ex.Plot4]</i></span>
+</p>
+</div>
+
+<p>
+<span
+    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
+><!----></span>
+</p>
+
+</section>
+
+</main>
+
+
+<nav class="botnavigation"><a href="fplot_wiki.html" class="linkhome" >
+Home</a></nav>
+
+</div><!-- grid -->
+</body>
+</html>

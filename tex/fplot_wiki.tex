@@ -1,58 +1,162 @@
-\documentclass[11pt, a4paper]{article}
-\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
-\usepackage{fontspec}
-
-\usepackage[english, bidi=basic, provide=*]{babel}
-
-\babelprovide[import, onchar=ids fonts]{english}
-\babelfont{rm}{Noto Sans}
-
-\usepackage{booktabs}
-\usepackage{tabularx}
-\usepackage{listings}
-\usepackage{xcolor}
+\documentclass[12pt, letterpaper]{article}
+% \usepackage[utf8]{inputenc} --- Since we're switching to the luatex compiler, I'm commenting this out since it will throw errors. Additionally, luatex is already UTF-8 by default.
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{textcomp}
 
-% This is kind of basic, so I'll probably update this by using lstset blocks I've used in other documentations.
-\lstset{
-	basicstyle=\ttfamily\small,
-	breaklines=true,
-	backgroundcolor=\color{gray!5},
-	frame=single,
-	keywordstyle=\color{blue},
-	commentstyle=\color{green!50!black},
-	stringstyle=\color{red},
-	showstringspaces=false,
-	captionpos=b
+%%%%%%%%% This preamble was copied over from my cl-freelock gh-pages branch.
+
+% NOTE 1: lwarpmk clean to fix corrupted aux files. Corrupted aux files means no hyperlinks.
+% NOTE 2: Because Biber was never ran against Manual_html, the HTML pages have broken citation links and an empty bibliography (hence: "Package biblatex Warning: Please (re)run Biber on the file: Manual_html"
+% NOTE 3: lwarp relies on "patching" packages like biblatex and cleveref to translate their complex TeX commands into valid HTML. When it reports "Patching failed," it means lwarp could not successfully intercept the commands to convert them into HTML hyperlinks.
+% "Package biblatex Warning: Patching footnotes failed"
+
+\usepackage[margin=1in]{geometry}
+\setlength{\marginparwidth}{2cm}
+\usepackage{amsmath, amssymb}
+\usepackage{csquotes}
+
+% n.b, I had to run sudo pacman -S texlive-plaingeneric ...
+% extra/texlive-plaingeneric 2026.1-1 (texlive)
+% usr/share/texmf-dist/tex/latex/tracklang/tracklang.sty
+% datetime2 requires tracklang.sty ...
+% Verify it can be found with kpsewhich tracklang.sty
+\usepackage[style=iso]{datetime2}
+\usepackage[
+mathjax,
+ImagesDirectory=imgs,
+ImagesName={lateximg-}
+]{lwarp}
+\usepackage[font=small]{caption}
+\usepackage{tabularx}
+\usepackage{booktabs}
+% n.b., Because lwarp fundamentally rewrites how floating environments (like figures and tables) are handled to prevent them from actually "floating" in an HTML document, it requires the float package to be loaded after lwarp so it can properly apply its HTML specific patches over float's definitions.
+\usepackage{float}
+\usepackage{listings}
+% lwarp actually does have special HTML patches for setspace so it must be after lwarp:
+\usepackage{setspace}
+\doublespacing
+% n.b., after an hour of debugging, I have learned that for lwarp v0.9+ graphics and color packages must be loaded after lwarp to avoid crashing the Gin@setfile HTML patcher...
+% additionally, hyperref must be loaded before biblatex, but after lwarp.
+% Additionally, I later learned that html does not support nested footnotes. i.e., autocite will not be rendered with hyperlinks inside a footnote, in lwarp generated html...this explains why the hyperlinks worked in the pdf, but not in the html. Therefor, any citations made inside a footnote must use \cite, not \autocite
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{calc, positioning}
+\usetikzlibrary{decorations.pathreplacing}
+% n.b., Even with the [disable] option, the todonotes package inherently loads tikz and xcolor (or color) in the background to set up its infrastructure.
+\usepackage[disable]{todonotes}
+
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
+\usepackage[style=authoryear,backend=biber]{biblatex}
+\addbibresource{references.bib}
+% \usepackage{enumitem}
+
+\widowpenalty=10000
+\clubpenalty=10000
+\DeclareRobustCommand{\code}[1]{%
+	\begingroup
+	\setlength{\fboxsep}{2pt}%
+	\colorbox{gray!15}{\ttfamily\small #1}%
+	\endgroup
+}
+\newcommand{\supcom}{%
+	\textsuperscript{,}
+}
+\newcommand{\multicomment}[1]{}
+
+\newcommand{\customitem}[2]{%
+	\noindent\textbf{#1}\\[0.5ex]%
+	#2\vspace{1ex}%
 }
 
-% Define the Lua language for the PDF compilation seperately (so not for pandoc)
-\lstdefinelanguage{Lua}{
-	morekeywords={and,break,do,else,elseif,end,false,for,function,if,in,local,nil,not,or,repeat,return,then,true,until,while,require},
-	morecomment=[l]{--},
-	morecomment=[s]{--[[}{]]},
-	morestring=[b]",
-	morestring=[b]'
+\lstnewenvironment{fennelcode}
+{\lstset{
+		language=Lisp,
+		alsoletter={-,:,?,>}, % Allow standard Fennel characters in keywords
+		morekeywords={
+			fn, lambda, let, local, var, set, each, for, while, do,
+			if, when, match, macro, import-macros, require-macros,
+			quote, unquote, hashfn, length, ipairs, pairs,
+			collect, icollect, accumulate, doto, ->, ->>,
+			nil, true, false, pandoc, table, string, math, require
+		},
+		basicstyle=\ttfamily\small\linespread{1}\selectfont\raggedright,
+		columns=fullflexible,
+		keepspaces=true,
+		upquote=true,
+		keywordstyle=\color{blue}\bfseries,
+		commentstyle=\color{green!60!black}\itshape,
+		stringstyle=\color{red},
+		breaklines=true,
+		showstringspaces=false,
+		aboveskip=1.5em,
+		belowskip=1.5em,
+		xleftmargin=0pt,
+		backgroundcolor=\color{gray!10},
+		frame=single,
+		framerule=1.5pt,
+		rulecolor=\color{black}
+}}
+{}
+
+\lstnewenvironment{luacode}
+{\lstset{
+		language=[5.3]Lua,
+		basicstyle=\ttfamily\small\linespread{1}\selectfont\raggedright,
+		columns=fullflexible,
+		keepspaces=true,
+		upquote=true,
+		keywordstyle=\color{blue}\bfseries,
+		commentstyle=\color{green!60!black}\itshape,
+		stringstyle=\color{red},
+		breaklines=true,
+		showstringspaces=false,
+		aboveskip=1.5em,
+		belowskip=1.5em,
+		xleftmargin=0pt,
+		backgroundcolor=\color{gray!10},
+		frame=single,
+		framerule=1.5pt,
+		rulecolor=\color{black}
+}}
+{}
+
+\lstnewenvironment{bashcode}
+{\lstset{
+		language=bash,
+		alsoletter={-},
+		morekeywords={
+			sudo, git, apt, apt-get, pacman, echo, cd, ls, mkdir, 
+			rm, mv, cp, export, source, make, cmake, ql, luarocks, lua, fennel
+		},
+		basicstyle=\ttfamily\small\linespread{1}\selectfont\raggedright,
+		columns=fullflexible,
+		keepspaces=true,
+		upquote=true,
+		keywordstyle=\color{blue}\bfseries,
+		commentstyle=\color{green!60!black}\itshape,
+		stringstyle=\color{red},
+		breaklines=true,
+		showstringspaces=false,
+		aboveskip=1.5em,
+		belowskip=1.5em,
+		xleftmargin=0pt,
+		backgroundcolor=\color{gray!10},
+		frame=single,
+		framerule=1.5pt,
+		rulecolor=\color{black}
+}}
+{}
+
+\newcommand{\lastedited}{%
+	Last edited: \DTMnow\ UTC%
 }
-
-% This is neccesary for pandoc
-\lstdefinestyle{lua}{language=Lua}
-\lstdefinestyle{lisp}{language=Lisp}
-\lstdefinestyle{bash}{language=bash}
-
-% hyperref must be the very last \usepackage
-\usepackage{hyperref}
-\hypersetup{
-	colorlinks=true,
-	linkcolor=blue,
-	filecolor=magenta,
-	urlcolor=cyan,
-	pdftitle={fplot Wiki Documentation},
-}
-
-\title{\textbf{fplot Wiki Documentation}}
-\author{}
-\date{}
+\date{\lastedited}
+\setcounter{FileDepth}{1}
+\title{fplot Manual}
+\author{Andrew D. France}
+\date{\lastedited}
 
 \begin{document}
 	
@@ -131,22 +235,22 @@
 	
 	Using \href{https://brew.sh/}{Homebrew}:
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 brew install gnuplot
-	\end{lstlisting}
+	\end{bashcode}
 	
 	\subsubsection*{Debian / Ubuntu}
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 sudo apt-get update
 sudo apt-get install gnuplot
-	\end{lstlisting}
+	\end{bashcode}
 	
 	\subsubsection*{Arch Linux (\&MSYS2)}
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 sudo pacman -S gnuplot
-	\end{lstlisting}
+	\end{bashcode}
 	
 	\subsubsection*{Windows}
 	
@@ -154,9 +258,9 @@ sudo pacman -S gnuplot
 	
 	To verify the installation, open a terminal and run:
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 gnuplot --version
-	\end{lstlisting}
+	\end{bashcode}
 	
 	You should see the installed version of \texttt{gnuplot}.
 	
@@ -164,9 +268,9 @@ gnuplot --version
 	
 	You can use \href{https://luarocks.org/}{LuaRocks}, \textit{(the package manager for Lua modules)}, to install \texttt{fplot}, or you can \texttt{git clone} the github repository.
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 luarocks install fplot
-	\end{lstlisting}
+	\end{bashcode}
 	
 	\subsection{3. Verify the Installation}
 	
@@ -176,20 +280,20 @@ luarocks install fplot
 	
 	Create a file \texttt{test.fnl}:
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 (print "fplot loaded successfully!")
 
 (fplot.plot
 {:options {:title "Test Plot"}
 	:datasets [{:data [1 2 3 4]}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	Run it from your terminal:
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 fennel test.fnl
-	\end{lstlisting}
+	\end{bashcode}
 	
 	A plot window should appear with a simple line graph.
 	
@@ -197,7 +301,7 @@ fennel test.fnl
 	
 	Create a file \texttt{test.lua}:
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 local fennel = require("fennel") fennel.install()
 local fplot = require("fplot")
 print("fplot loaded successfully!")
@@ -208,13 +312,13 @@ fplot.plot({
 		{ data = {1, 2, 3, 4} }
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	Run it from your terminal:
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 lua test.lua
-	\end{lstlisting}
+	\end{bashcode}
 	
 	A plot window should appear, just like the Fennel example.
 	
@@ -243,17 +347,17 @@ lua test.lua
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 (fplot.plot
 {:options {:title "My First Plot"}
 	:datasets [{:data [1 5 3 8 6]}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 -- First, install the fennel loader
 require("fennel").install()
 local fplot = require("fplot")
@@ -264,7 +368,7 @@ fplot.plot({
 		{ data = {1, 5, 3, 8, 6} }
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	When you run this code, fplot will open an interactive window displaying a line chart. The y-values are \texttt{1, 5, 3, 8, 6}, and the x-values default to their indices (\texttt{1, 2, 3, 4, 5}).
 	
@@ -274,7 +378,7 @@ fplot.plot({
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 (local squared-data [])
@@ -289,11 +393,11 @@ fplot.plot({
 	:datasets [{:title "x^2"
 		:style "points"
 		:data squared-data}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -318,7 +422,7 @@ fplot.plot({
 		}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	In this example, we:
 	\begin{itemize}
@@ -334,7 +438,7 @@ fplot.plot({
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 ;; Generate data
@@ -353,11 +457,11 @@ fplot.plot({
 		:y-range [-125 125]}
 	:datasets [{:title "x^2" :style "lines" :data squared-data}
 	{:title "x^3" :style "lines" :data cubed-data}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -384,7 +488,7 @@ fplot.plot({
 		{title = "x^3", style = "lines", data = cubed_data}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	Here, we've added a second dataset for $y = x^3$. We also added \texttt{:x-range} and \texttt{:y-range} to the options to set the viewing window of the plot. fplot automatically assigns different colors and line styles to each dataset.
 	
@@ -394,7 +498,7 @@ fplot.plot({
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 ;; Generate data
@@ -413,11 +517,11 @@ fplot.plot({
 		:output-type "svg"}
 	:datasets [{:title "x^2" :style "lines" :data squared-data}
 	{:title "x^3" :style "lines" :data cubed-data}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -446,7 +550,7 @@ fplot.plot({
 		{title = "x^3", style = "lines", data = cubed_data}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	This will create an SVG file named \texttt{polynomials.svg} in the same directory. Common output types include \texttt{pngcairo}, \texttt{svg}, \texttt{pdfcairo}, and \texttt{jpeg}.
 	
@@ -600,59 +704,59 @@ fplot.plot({
 	
 	A simple list of numbers will be plotted against their indices (1, 2, 3, ...).
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 :data [10 12 15 11 9]
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{2. X-Y Pairs (List of Lists/Tables)}
 	
 	This is the most common format for 2D plots.
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 :data [[0 10] [1 12] [2 15] [3 11] [4 9]]
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{3. Columnar Data (Transposed Table)}
 	
 	If it's more convenient to provide data as columns, fplot will automatically transpose it. This is detected when the number of inner tables (columns) is less than the number of items in the first inner table.
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 ;; This is treated the same as the X-Y pairs above
 :data [[0 1 2 3 4]      ;-- x-values
 [10 12 15 11 9]]  ;-- y-values
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{4. 3D Grid Data (for \texttt{splot})}
 	
 	For surface plots (e.g., with \texttt{pm3d}), provide a list of rows, where each row is a list of \texttt{[x y z]} points. \texttt{fplot} formats this correctly by adding blank lines between rows for gnuplot.
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 :data [;; Row 1
 [[0 0 5] [0 1 6] [0 2 7]]
 ;; Row 2
 [[1 0 8] [1 1 9] [1 2 8]]
 ;; Row 3
 [[2 0 7] [2 1 6] [2 2 5]]]
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{5. Data from a File}
 	
 	To plot data directly from a file, provide the filename as a string in the \texttt{:data} field.
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 :data "path/to/your/data.dat"
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	The data file should be plain text, with columns separated by whitespace. For example \texttt{data.dat}:
 	
-	\begin{lstlisting}
+	\begin{bashcode}
 # X Y
 0  10
 1  12
 2  15
 3  11
 4  9
-	\end{lstlisting}
+	\end{bashcode}
 	
 	\newpage
 	
@@ -680,7 +784,7 @@ fplot.plot({
 	
 	\paragraph{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 ;; --- Data ---
 (local sin-data [])
@@ -700,11 +804,11 @@ fplot.plot({
 ;; Multiplot Configuration (in the last table)
 {:options {:multiplot {:layout [2 1]
 			:title "Trigonometric Functions"}}})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\paragraph{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -741,7 +845,7 @@ fplot.plot(
 	}
 }
 )
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -765,7 +869,7 @@ fplot.plot(
 	
 	\paragraph{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (fplot.plot
 {:options {:title "Annotated Plot"
 		:x-range [0 10]
@@ -775,11 +879,11 @@ fplot.plot(
 		:objects [["rectangle" "from 4,0 to 6,10 fs transparent solid 0.1 noborder"]]}
 	:datasets [{:data [[1 2] [3 7] [5 10] [7 6] [9 3]]
 		:style "linespoints"}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\paragraph{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 fplot.plot({
 	options = {
 		title = "Annotated Plot",
@@ -802,7 +906,7 @@ fplot.plot({
 		}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -820,22 +924,22 @@ fplot.plot({
 	
 	\paragraph{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 (fplot.plot
 {:options {:title "Quarterly Sales"
 		:xtics [["Q1" 1] ["Q2" 2] ["Q3" 3] ["Q4" 4]]
 		:ytics [0 10000 20000 30000]
-		:y-label "Revenue ($)"}
+		:y-label "Revenue (\$)"}
 	:datasets [{:data [[1 15000] [2 22000] [3 18000] [4 25000]]
 		:style "boxes"
 		:title "Sales"}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\paragraph{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -844,7 +948,7 @@ fplot.plot({
 		title = "Quarterly Sales",
 		xtics = {{"Q1", 1}, {"Q2", 2}, {"Q3", 3}, {"Q4", 4}},
 		ytics = {0, 10000, 20000, 30000},
-		["y-label"] = "Revenue ($)"
+		["y-label"] = "Revenue (\$)"
 	},
 	datasets = {
 		{
@@ -854,7 +958,7 @@ fplot.plot({
 		}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -872,7 +976,7 @@ fplot.plot({
 	
 	\paragraph{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 (fplot.plot
@@ -886,7 +990,7 @@ fplot.plot({
 	
 	\paragraph{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -904,7 +1008,7 @@ fplot.plot({
 		{ title = "Group B", data = {12, 11, 14} }
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -935,7 +1039,7 @@ fplot.plot({
 	
 	This is useful if you have existing Gnuplot scripts or need to set a simple string substitution.
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (fplot.plot
 {:options {:title "Plotting with a Gnuplot Macro"
 		:x-range [-5 5]
@@ -943,7 +1047,7 @@ fplot.plot({
 		:extra-opts ["my_func = 'sin(x) / x'"]}
 	;; ...
 })
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsection{Fennel: The Real Macro System}
 	
@@ -953,7 +1057,7 @@ fplot.plot({
 	
 	You can write functions that generate complex datasets.
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 ;; A function for generating sinc data
 (fn generate-sinc-data [steps]
 (let [data []
@@ -973,13 +1077,13 @@ data))
 (local sinc-data (generate-sinc-data 40))
 (fplot.splot {:options {:title "Sinc Function"}
 	:datasets [{:data sinc-data :style "pm3d"}]}) 
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{2. Reusable Style Templates}
 	
 	Create functions that return tables with your preferred plot options. This allows you to maintain a consistent style across many different plots.
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 ;; A function for a publication-quality plot style
 (fn publication-style [title]
 {:title title
@@ -991,7 +1095,7 @@ data))
 (fplot.plot
 {:options (publication-style "My Publication Plot")
 	:datasets [...]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{3. Putting It All Together}
 	
@@ -999,7 +1103,7 @@ data))
 	
 	\paragraph{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 ;; Helper function to recursively clone a table.
@@ -1052,11 +1156,11 @@ data))
 	:datasets [final-dataset]})
 
 (print "Plot generated at my-new-composed-plot.png")
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\paragraph{The Lua Equivalent: Reusable Functions}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -1130,7 +1234,7 @@ fplot.plot({
 })
 
 print("Plot generated at my-composed-plot.png")
-	\end{lstlisting}
+	\end{luacode}
 	
 	\noindent\rule{\textwidth}{0.4pt}
 	
@@ -1145,7 +1249,7 @@ print("Plot generated at my-composed-plot.png")
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 (local data1 [])
@@ -1170,11 +1274,11 @@ print("Plot generated at my-composed-plot.png")
 		:color "red"
 		:pointtype 7
 		:data data2}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -1210,7 +1314,7 @@ fplot.plot({
 		}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -1226,7 +1330,7 @@ fplot.plot({
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 (fplot.plot
@@ -1239,11 +1343,11 @@ fplot.plot({
 	:datasets [{:title "Production"
 		:style "boxes"
 		:data [[1 42000] [2 35000] [3 48000] [4 29000]]}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -1264,7 +1368,7 @@ fplot.plot({
 		}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -1280,7 +1384,7 @@ fplot.plot({
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 (local data [])
@@ -1301,11 +1405,11 @@ z (/ (math.sin r) r)]
 	:datasets [{:data data
 		:style "pm3d"
 		:title ""}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -1336,7 +1440,7 @@ fplot.splot({
 		}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -1352,7 +1456,7 @@ fplot.splot({
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 (local data [])
@@ -1368,11 +1472,11 @@ fplot.splot({
 	:datasets [{:title "Decay"
 		:style "lines"
 		:data data}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -1397,7 +1501,7 @@ fplot.plot({
 		}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -1421,7 +1525,7 @@ fplot.plot({
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 ;; --- Mock Data Generation ---
@@ -1456,11 +1560,11 @@ p-value (math.random)]
 	:datasets [{:style "points" :pointtype 7 :color "#cccccc" :data non-significant}
 	{:style "points" :pointtype 7 :color "#ff4136" :data up-regulated}
 	{:style "points" :pointtype 7 :color "#0074d9" :data down-regulated}]})
-\end{lstlisting}
+\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -1503,7 +1607,7 @@ fplot.plot({
 		{style = "points", pointtype = 7, color = "#0074d9", data = down_regulated}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -1519,7 +1623,7 @@ fplot.plot({
 	
 	\subsubsection*{Fennel}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (local fplot (require :fplot))
 
 ;; --- Mock Data Generation ---
@@ -1549,11 +1653,11 @@ tm2 65]
 		:style "lines"
 		:color "blue"
 		:data with-ligand}]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	\subsubsection*{Lua}
 	
-	\begin{lstlisting}[style=lua]
+	\begin{luacode}
 require("fennel").install()
 local fplot = require("fplot")
 
@@ -1595,7 +1699,7 @@ fplot.plot({
 		}
 	}
 })
-	\end{lstlisting}
+	\end{luacode}
 	
 	\textit{(The resulting plot generated by fplot)}
 	
@@ -1643,11 +1747,11 @@ fplot.plot({
 	
 	You can tell MSYS2 not to convert paths by setting an environment variable before running your script.
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 # In your MSYS2 terminal
 export MSYS2_ARG_CONV_EXCL="*"
 fennel your_plot_script.fnl
-	\end{lstlisting}
+	\end{bashcode}
 	
 	To make this permanent, add \texttt{export MSYS2\_ARG\_CONV\_EXCL="*"} to your \texttt{\textasciitilde/.bashrc} or \texttt{\textasciitilde/.bash\_profile} file in your MSYS2 home directory.
 	
@@ -1655,9 +1759,9 @@ fennel your_plot_script.fnl
 	
 	Within your MSYS2 environment, it's best to use the \texttt{gnuplot} package from the MinGW repositories, as it's a native Windows build that integrates well with the environment. You can install it using \texttt{pacman}:
 	
-	\begin{lstlisting}[style=bash]
+	\begin{bashcode}
 pacman -S mingw-w64-x86_64-gnuplot
-	\end{lstlisting}
+	\end{bashcode}
 	
 	This version is generally more reliable for GUI applications than a purely POSIX-emulated build. However, even with this version, the path mangling described in Solution 1 is often still a problem, so disabling it is the most robust fix.
 	
@@ -1672,11 +1776,11 @@ pacman -S mingw-w64-x86_64-gnuplot
 	\begin{enumerate}
 		\item \textbf{Ensure WSL is Up-to-Date:} Open a Windows PowerShell or Command Prompt and run \texttt{wsl --update}. This will ensure you have the latest version with WSLg.
 		\item \textbf{Install a GUI-enabled \texttt{gnuplot}:} Your Linux distribution needs a version of \texttt{gnuplot} that can create a graphical window.
-		\begin{lstlisting}[style=bash]
+		\begin{bashcode}
 # On Debian/Ubuntu
 sudo apt-get update
 sudo apt-get install gnuplot-x11
-		\end{lstlisting}
+		\end{bashcode}
 		This should be all you need. When you run your \texttt{fplot} script from WSL2, the plot window should appear on your Windows desktop automatically(appearance is slow).
 	\end{enumerate}
 	
@@ -1688,9 +1792,9 @@ sudo apt-get install gnuplot-x11
 		\item \textbf{Install an X Server on Windows:} Download and install a free X server like \href{https://sourceforge.net/projects/vcxsrv/}{VcXsrv} on your Windows machine.
 		\item \textbf{Launch the X Server:} Launch VcXsrv and choose "Multiple windows", "Display number -1", and on the final page, check "Disable access control".
 		\item \textbf{Configure the \texttt{DISPLAY} Variable in WSL2:} Your Linux environment needs to know where the display is. Add the following line to your \texttt{\textasciitilde/.bashrc} file in your WSL2 home directory:
-		\begin{lstlisting}[style=bash]
+		\begin{bashcode}
 export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2; exit;}'):0.0
-		\end{lstlisting}
+		\end{bashcode}
 		\item \textbf{Reload Your Shell:} Close and reopen your WSL2 terminal, or run \texttt{source \textasciitilde/.bashrc}. After this, GUI applications from WSL2 should appear on your desktop.
 	\end{enumerate}
 	
@@ -1724,13 +1828,13 @@ export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2; exit;}
 	
 	\textbf{Example (forcing the \texttt{qt} terminal):}
 	
-	\begin{lstlisting}[style=lisp]
+	\begin{fennelcode}
 (fplot.plot
 {:options {:title "My Plot"
 		:output-type "qt"} ; <-- Force the qt terminal
 	:datasets [;...
 	]})
-	\end{lstlisting}
+	\end{fennelcode}
 	
 	This is a powerful troubleshooting step. If the default \texttt{wxt} terminal fails, try \texttt{qt}. If \texttt{qt} fails, try \texttt{x11} (on Linux). Make sure you have the necessary support libraries installed for the terminal you want to use (e.g., the \texttt{gnuplot-qt} package on Debian/Ubuntu for the \texttt{qt} terminal).
 	

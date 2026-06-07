@@ -1,0 +1,1204 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<meta name="generator" content="LaTeX Lwarp package" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>fplot Manual — Configuration Options</title>
+<link rel="stylesheet" type="text/css" href="lwarp.css" />
+
+<script>
+// Lwarp MathJax emulation code
+//
+// Based on code by Davide P. Cervone.
+// Equation numbering: https://github.com/mathjax/MathJax/issues/2427
+// Starred and ifnextchar macros: https://github.com/mathjax/MathJax/issues/2428
+// \left, \right delimiters: https://github.com/mathjax/MathJax/issues/2535
+//
+// Modified by Brian Dunn to adjust equation numbering and add subequations.
+//
+// LaTeX can use \seteqnumber{subequations?}{section}{number} before each equation.
+// subequations? is 0 usually, 1 if inside subequations.
+// section is a string printed as-is, or empty.
+// number is auto-incremented by MathJax between equations.
+//
+MathJax = {
+    subequations: "0",
+    section: "",
+    loader: {
+         load: ['[tex]/tagformat', '[tex]/textmacros'],
+    },
+    startup: {
+         ready() {
+             //       These would be replaced by import commands if you wanted to make
+             //       a proper extension.
+             const Configuration = MathJax._.input.tex.Configuration.Configuration;
+             const CommandMap = MathJax._.input.tex.SymbolMap.CommandMap;
+             const Macro = MathJax._.input.tex.Symbol.Macro;
+             const TexError = MathJax._.input.tex.TexError.default;
+             const ParseUtil = MathJax._.input.tex.ParseUtil.default;
+             const expandable = MathJax._.util.Options.expandable;
+
+
+             //       Insert the replacement string into the TeX string, and check
+             //       that there haven't been too many maxro substitutions (prevents
+             //       infinite loops).
+             const useArgument = (parser, text) => {
+                 parser.string = ParseUtil.addArgs(parser, text, parser.string.slice(parser.i));
+                 parser.i = 0;
+                 if (++parser.macroCount > parser.configuration.options.maxMacros) {
+                     throw new TexError('MaxMacroSub1',
+                     'MathJax maximum macro substitution count exceeded; ' +
+                     'is there a recursive macro call?');
+                 }
+             }
+
+
+             //       Create the command map for:
+             //          \ifstar, \ifnextchar, \ifblank, \ifstrequal, \gsub, \seteqnumber
+             new CommandMap('Lwarp-macros', {
+                 ifstar: 'IfstarFunction',
+                 ifnextchar: 'IfnextcharFunction',
+                 ifblank: 'IfblankFunction',
+                 ifstrequal: 'IfstrequalFunction',
+                 gsubstitute: 'GsubstituteFunction',
+                 seteqnumber: 'SeteqnumberFunction'
+             }, {
+                 //      This function implements an ifstar macro.
+                 IfstarFunction(parser, name) {
+                     const resultstar = parser.GetArgument(name);
+                     const resultnostar = parser.GetArgument(name);
+                     const star = parser.GetStar();                        // true if there is a *
+                     useArgument(parser, star ? resultstar : resultnostar);
+                 },
+
+
+                 //      This function implements an ifnextchar macro.
+                 IfnextcharFunction(parser, name) {
+                     let whichchar = parser.GetArgument(name);
+                     if (whichchar.match(/^(?:0x[0-9A-F]+|[0-9]+)$/i)) {
+                         // $ syntax highlighting
+                         whichchar = String.fromCodePoint(parseInt(whichchar));
+                     }
+                     const resultnextchar = parser.GetArgument(name);
+                     const resultnotnextchar = parser.GetArgument(name);
+                     const gotchar = (parser.GetNext() === whichchar);
+                     useArgument(parser, gotchar ? resultnextchar : resultnotnextchar);
+                 },
+
+
+                 // This function implements an ifblank macro.
+                 IfblankFunction(parser, name) {
+                     const blankarg = parser.GetArgument(name);
+                     const resultblank = parser.GetArgument(name);
+                     const resultnotblank = parser.GetArgument(name);
+                     const isblank = (blankarg.trim() == "");
+                     useArgument(parser, isblank ? resultblank : resultnotblank);
+                 },
+
+
+                 // This function implements an ifstrequal macro.
+                 IfstrequalFunction(parser, name) {
+                     const strequalfirst = parser.GetArgument(name);
+                     const strequalsecond = parser.GetArgument(name);
+                     const resultequal = parser.GetArgument(name);
+                     const resultnotequal = parser.GetArgument(name);
+                     const isequal = (strequalfirst == strequalsecond);
+                     useArgument(parser, isequal ? resultequal : resultnotequal);
+                 },
+
+
+                 // This function implements a gsub macro.
+                 GsubstituteFunction(parser, name) {
+                     const gsubfirst = parser.GetArgument(name);
+                     const gsubsecond = parser.GetArgument(name);
+                     const gsubthird = parser.GetArgument(name);
+                     let gsubresult=gsubfirst.replace(gsubsecond, gsubthird);
+                     useArgument(parser, gsubresult);
+                 },
+
+
+                 //      This function modifies the equation numbers.
+                 SeteqnumberFunction(parser, name) {
+                         //   Get the macro parameters
+                         const star = parser.GetStar();                       // true if there is a *
+                         const optBrackets = parser.GetBrackets(name);        // contents of optional brackets
+                         const newsubequations = parser.GetArgument(name);       // the subequations argument
+                         const neweqsection = parser.GetArgument(name);       // the eq section argument
+                         const neweqnumber = parser.GetArgument(name);        // the eq number argument
+                         MathJax.config.subequations=newsubequations ;        // a string with boolean meaning
+                         MathJax.config.section=neweqsection ;                // a string with numeric meaning
+                         parser.tags.counter = parser.tags.allCounter = neweqnumber ;
+                 }
+
+
+             });
+
+
+             //       Create the Lwarp-macros package
+             Configuration.create('Lwarp-macros', {
+                 handler: {macro: ['Lwarp-macros']}
+             });
+
+
+             MathJax.startup.defaultReady();
+
+
+             // For forward references:
+             MathJax.startup.input[0].preFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         MathJax.config.subequations = math.inputData.recompile.subequations;
+                         MathJax.config.section = math.inputData.recompile.section;
+                 }
+             });
+             MathJax.startup.input[0].postFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         math.inputData.recompile.subequations = MathJax.config.subequations;
+                         math.inputData.recompile.section = MathJax.config.section;
+                 }
+             });
+
+
+                 // For \left, \right with unicode-math:
+                 const {DelimiterMap} = MathJax._.input.tex.SymbolMap;
+                 const {Symbol} = MathJax._.input.tex.Symbol;
+                 const {MapHandler} = MathJax._.input.tex.MapHandler;
+                 const delimiter = MapHandler.getMap('delimiter');
+                 delimiter.add('\\lBrack', new Symbol('\\lBrack', '\u27E6'));
+                 delimiter.add('\\rBrack', new Symbol('\\rBrack', '\u27E7'));
+                 delimiter.add('\\lAngle', new Symbol('\\lAngle', '\u27EA'));
+                 delimiter.add('\\rAngle', new Symbol('\\rAngle', '\u27EB'));
+                 delimiter.add('\\lbrbrak', new Symbol('\\lbrbrak', '\u2772'));
+                 delimiter.add('\\rbrbrak', new Symbol('\\rbrbrak', '\u2773'));
+                 delimiter.add('\\lbag', new Symbol('\\lbag', '\u27C5'));
+                 delimiter.add('\\rbag', new Symbol('\\rbag', '\u27C6'));
+                 delimiter.add('\\llparenthesis', new Symbol('\\llparenthesis', '\u2987'));
+                 delimiter.add('\\rrparenthesis', new Symbol('\\rrparenthesis', '\u2988'));
+                 delimiter.add('\\llangle', new Symbol('\\llangle', '\u2989'));
+                 delimiter.add('\\rrangle', new Symbol('\\rrangle', '\u298A'));
+                 delimiter.add('\\Lbrbrak', new Symbol('\\Lbrbrak', '\u27EC'));
+                 delimiter.add('\\Rbrbrak', new Symbol('\\Rbrbrak', '\u27ED'));
+                 delimiter.add('\\lBrace', new Symbol('\\lBrace', '\u2983'));
+                 delimiter.add('\\rBrace', new Symbol('\\rBrace', '\u2984'));
+                 delimiter.add('\\lParen', new Symbol('\\lParen', '\u2985'));
+                 delimiter.add('\\rParen', new Symbol('\\rParen', '\u2986'));
+                 delimiter.add('\\lbrackubar', new Symbol('\\lbrackubar', '\u298B'));
+                 delimiter.add('\\rbrackubar', new Symbol('\\rbrackubar', '\u298C'));
+                 delimiter.add('\\lbrackultick', new Symbol('\\lbrackultick', '\u298D'));
+                 delimiter.add('\\rbracklrtick', new Symbol('\\rbracklrtick', '\u298E'));
+                 delimiter.add('\\lbracklltick', new Symbol('\\lbracklltick', '\u298F'));
+                 delimiter.add('\\rbrackurtick', new Symbol('\\rbrackurtick', '\u2990'));
+                 delimiter.add('\\langledot', new Symbol('\\langledot', '\u2991'));
+                 delimiter.add('\\rangledot', new Symbol('\\rangledot', '\u2992'));
+                 delimiter.add('\\lparenless', new Symbol('\\lparenless', '\u2993'));
+                 delimiter.add('\\rparengtr', new Symbol('\\rparengtr', '\u2994'));
+                 delimiter.add('\\Lparengtr', new Symbol('\\Lparengtr', '\u2995'));
+                 delimiter.add('\\Rparenless', new Symbol('\\Rparenless', '\u2996'));
+                 delimiter.add('\\lblkbrbrak', new Symbol('\\lblkbrbrak', '\u2997'));
+                 delimiter.add('\\rblkbrbrak', new Symbol('\\rblkbrbrak', '\u2998'));
+                 delimiter.add('\\lvzigzag', new Symbol('\\lvzigzag', '\u29D8'));
+                 delimiter.add('\\rvzigzag', new Symbol('\\rvzigzag', '\u29D9'));
+                 delimiter.add('\\Lvzigzag', new Symbol('\\Lvzigzag', '\u29DA'));
+                 delimiter.add('\\Rvzigzag', new Symbol('\\Rvzigzag', '\u29DB'));
+                 delimiter.add('\\lcurvyangle', new Symbol('\\lcurvyangle', '\u29FC'));
+                 delimiter.add('\\rcurvyangle', new Symbol('\\rcurvyangle', '\u29FD'));
+                 delimiter.add('\\Vvert', new Symbol('\\Vvert', '\u2980'));
+         }       // ready
+    },           // startup
+
+
+    tex: {
+         packages: {'[+]': ['tagformat', 'Lwarp-macros', 'textmacros']},
+         tags: "ams",
+                 tagformat: {
+                         number: function (n) {
+                              if(MathJax.config.subequations==0)
+                                     return(MathJax.config.section + n);
+                              else
+                                     return(MathJax.config.section + String.fromCharCode(96+n));
+                         },
+                 },
+    }
+}
+</script>
+
+
+<script
+         id="MathJax-script"
+         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/stackoverflow-light.min.css">
+<style>.hljs { background: transparent !important; padding: 0 !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lisp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lua.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("pre.programlisting").forEach(el => {
+    const rawText = el.textContent;
+    const code = document.createElement("code");
+    // Auto-detect Bash, Lua, or default to Lisp for Fennel
+    if (rawText.includes("git clone") || rawText.includes("cd ") || rawText.includes("make ") || rawText.trim().startsWith("$")) {
+      code.className = "language-bash";
+    } else if (rawText.includes("function") || rawText.includes("local ") || rawText.includes("require(")) {
+      code.className = "language-lua";
+    } else {
+      code.className = "language-lisp";
+    }
+    code.textContent = rawText;
+    el.innerHTML = "";
+    el.appendChild(code);
+    hljs.highlightElement(code);
+  });
+});
+</script>
+</head>
+<body>
+
+
+<a id="fplot_wiki-autopage-55"></a>
+<div class="pagegrid">
+
+
+<nav class="topnavigation"><a href="fplot_wiki.html" class="linkhome" >
+Home</a></nav>
+<div class="sidetoccontainer">
+
+
+<nav class="sidetoc">
+
+
+<div class="sidetoctitle">
+
+<p>
+<span class="sidetocthetitle">fplot Manual</span>
+</p>
+
+<p>
+Contents
+</p>
+</div>
+
+
+<div class="sidetoccontents">
+
+<p>
+<a href="fplot_wiki.html" class="linkhome" >
+Home</a>
+</p>
+
+<p>
+<a href="Welcome-fplot-Wiki.html#autosec-5" class="tocsection" >
+<span class="sectionnumber">1</span>&#x2003;Welcome to the fplot Wiki!</a>
+</p>
+
+
+<p>
+<a href="Installation.html#autosec-13" class="tocsection" >
+<span class="sectionnumber">2</span>&#x2003;Installation</a>
+</p>
+
+
+<p>
+<a href="Getting-Started-Tutorial.html#autosec-33" class="tocsection" >
+<span class="sectionnumber">3</span>&#x2003;Getting Started Tutorial</a>
+</p>
+
+
+<p>
+<a href="Configuration-Options.html#autosec-56" class="tocsection" >
+<span class="sectionnumber">4</span>&#x2003;Configuration Options</a>
+</p>
+
+
+<p>
+<a href="Dataset-Configuration.html#autosec-73" class="tocsection" >
+<span class="sectionnumber">5</span>&#x2003;Dataset Configuration</a>
+</p>
+
+
+<p>
+<a href="Advanced-Features.html#autosec-93" class="tocsection" >
+<span class="sectionnumber">6</span>&#x2003;Advanced Features</a>
+</p>
+
+
+<p>
+<a href="Examples.html#autosec-131" class="tocsection" >
+<span class="sectionnumber">7</span>&#x2003;Examples</a>
+</p>
+
+
+<p>
+<a href="Biotech-Applications.html#autosec-157" class="tocsection" >
+<span class="sectionnumber">8</span>&#x2003;Biotech Applications</a>
+</p>
+
+
+<p>
+<a href="Troubleshooting-Guide.html#autosec-171" class="tocsection" >
+<span class="sectionnumber">9</span>&#x2003;Troubleshooting Guide</a>
+</p>
+
+
+</div>
+
+</nav>
+
+</div>
+
+
+<main class="bodycontainer">
+
+
+<section class="textbody">
+
+<h1>fplot Manual</h1>
+
+<!--MathJax customizations:-->
+<div data-nosnippet
+    style="display:none"
+>
+
+\(\newcommand{\footnotename}{footnote}\)
+
+\(\def \LWRfootnote {1}\)
+
+\(\newcommand {\footnote }[2][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\newcommand {\footnotemark }[1][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\let \LWRorighspace \hspace \)
+
+\(\renewcommand {\hspace }{\ifstar \LWRorighspace \LWRorighspace }\)
+
+\(\newcommand {\TextOrMath }[2]{#2}\)
+
+\(\newcommand {\mathnormal }[1]{{#1}}\)
+
+\(\newcommand \ensuremath [1]{#1}\)
+
+\(\newcommand {\LWRframebox }[2][]{\fbox {#2}} \newcommand {\framebox }[1][]{\LWRframebox } \)
+
+\(\newcommand {\setlength }[2]{}\)
+
+\(\newcommand {\addtolength }[2]{}\)
+
+\(\newcommand {\setcounter }[2]{}\)
+
+\(\newcommand {\addtocounter }[2]{}\)
+
+\(\newcommand {\arabic }[1]{}\)
+
+\(\newcommand {\number }[1]{}\)
+
+\(\newcommand {\noalign }[1]{\text {#1}\notag \\}\)
+
+\(\newcommand {\cline }[1]{}\)
+
+\(\newcommand {\directlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\luatexdirectlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\protect }{}\)
+
+\(\def \LWRabsorbnumber #1 {}\)
+
+\(\def \LWRabsorbquotenumber &quot;#1 {}\)
+
+\(\newcommand {\LWRabsorboption }[1][]{}\)
+
+\(\newcommand {\LWRabsorbtwooptions }[1][]{\LWRabsorboption }\)
+
+\(\def \mathchar {\ifnextchar &quot;\LWRabsorbquotenumber \LWRabsorbnumber }\)
+
+\(\def \mathcode #1={\mathchar }\)
+
+\(\let \delcode \mathcode \)
+
+\(\let \delimiter \mathchar \)
+
+\(\def \oe {\unicode {x0153}}\)
+
+\(\def \OE {\unicode {x0152}}\)
+
+\(\def \ae {\unicode {x00E6}}\)
+
+\(\def \AE {\unicode {x00C6}}\)
+
+\(\def \aa {\unicode {x00E5}}\)
+
+\(\def \AA {\unicode {x00C5}}\)
+
+\(\def \o {\unicode {x00F8}}\)
+
+\(\def \O {\unicode {x00D8}}\)
+
+\(\def \l {\unicode {x0142}}\)
+
+\(\def \L {\unicode {x0141}}\)
+
+\(\def \ss {\unicode {x00DF}}\)
+
+\(\def \SS {\unicode {x1E9E}}\)
+
+\(\def \dag {\unicode {x2020}}\)
+
+\(\def \ddag {\unicode {x2021}}\)
+
+\(\def \P {\unicode {x00B6}}\)
+
+\(\def \copyright {\unicode {x00A9}}\)
+
+\(\def \pounds {\unicode {x00A3}}\)
+
+\(\let \LWRref \ref \)
+
+\(\renewcommand {\ref }{\ifstar \LWRref \LWRref }\)
+
+\( \newcommand {\multicolumn }[3]{#3}\)
+
+\(\require {textcomp}\)
+
+\(\newcommand {\intertext }[1]{\text {#1}\notag \\}\)
+
+\(\let \Hat \hat \)
+
+\(\let \Check \check \)
+
+\(\let \Tilde \tilde \)
+
+\(\let \Acute \acute \)
+
+\(\let \Grave \grave \)
+
+\(\let \Dot \dot \)
+
+\(\let \Ddot \ddot \)
+
+\(\let \Breve \breve \)
+
+\(\let \Bar \bar \)
+
+\(\let \Vec \vec \)
+
+\(\newcommand {\toprule }[1][]{\hline }\)
+
+\(\let \midrule \toprule \)
+
+\(\let \bottomrule \toprule \)
+
+\(\def \LWRbooktabscmidruleparen (#1)#2{}\)
+
+\(\newcommand {\LWRbooktabscmidrulenoparen }[1]{}\)
+
+\(\newcommand {\cmidrule }[1][]{\ifnextchar (\LWRbooktabscmidruleparen \LWRbooktabscmidrulenoparen }\)
+
+\(\newcommand {\morecmidrules }{}\)
+
+\(\newcommand {\specialrule }[3]{\hline }\)
+
+\(\newcommand {\addlinespace }[1][]{}\)
+
+</div>
+
+<!--
+...... section Configuration Options ......
+-->
+<h4 id="autosec-56"><span class="sectionnumber">4&#x2003;</span>Configuration Options</h4>
+<a id="fplot_wiki-autopage-56"></a>
+<a id="fplot_wiki-autofile-4"></a>
+
+<p>
+The <kbd>:options</kbd> table in <kbd>fplot</kbd> controls the overall appearance and properties of your plot. It’s where you set titles, labels, ranges, output files, and more.
+</p>
+
+<p>
+Below is a comprehensive list of all available options. Remember that when using Lua, keys with hyphens (like <kbd>:output-file</kbd>) must be written using the <kbd>["key-name"] = value</kbd> syntax.
+</p>
+<!--
+...... subsection General ......
+-->
+<h5 id="autosec-57"><span class="sectionnumber">4.1&#x2003;</span>General</h5>
+<a id="fplot_wiki-autopage-57"></a>
+
+
+<figure id="autoid-1" class="table ">
+<div class="center">
+<table>
+
+<tr style="display:none"><th>.</th></tr>
+
+<tr class="tbrule">
+<td class="tdl"><b>Key</b></td>
+<td class="tdl"><b>Type</b></td>
+<td class="tdp">
+
+<p>
+<b>Description</b>
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<b>Example (Fennel)</b>
+</p>
+</td>
+</tr>
+
+<tr class="hline">
+<td class="tdl"><kbd>:title</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+The main title of the plot.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:title "My Awesome Plot"</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:output-type</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+The gnuplot terminal to use. Determines the output format. Common values: <kbd>wxt</kbd> (default, interactive window), <kbd>qt</kbd>, <kbd>pngcairo</kbd>, <kbd>svg</kbd>, <kbd>pdfcairo</kbd>.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:output-type "pngcairo"</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:output-file</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+The path to save the output file. If <kbd>nil</kbd>, the plot is displayed in an interactive window.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:output-file "my-plot.png"</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:size</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+A table <kbd>[width, height]</kbd> specifying the dimensions of the output in pixels.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:size [800 600]</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:font</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+The font to use for text elements (e.g., ”Arial”, ”Helvetica”).
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:font "Arial"</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:font-size</kbd></td>
+<td class="tdl">number</td>
+<td class="tdp">
+
+<p>
+The size of the font.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:font-size 12</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:gnuplot-executable</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+The path to the gnuplot executable. Defaults to <kbd>"gnuplot"</kbd>, relying on the system <kbd>PATH</kbd>.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:gnuplot-executable "/opt/local/bin/gnuplot"</kbd>
+</p>
+</td>
+</tr>
+
+<tr class="tbrule" aria-hidden="true">
+<td class="tdl"></td>
+<td class="tdl"></td>
+<td class="tdp">
+
+</td>
+<td class="tdp">
+
+</td>
+</tr>
+</table>
+
+</div>
+
+</figure>
+<!--
+...... subsection Axes and Labels ......
+-->
+<h5 id="autosec-60"><span class="sectionnumber">4.2&#x2003;</span>Axes and Labels</h5>
+<a id="fplot_wiki-autopage-60"></a>
+
+
+<figure id="autoid-2" class="table ">
+<div class="center">
+<table>
+
+<tr style="display:none"><th>.</th></tr>
+
+<tr class="tbrule">
+<td class="tdl"><b>Key</b></td>
+<td class="tdl"><b>Type</b></td>
+<td class="tdp">
+
+<p>
+<b>Description</b>
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<b>Example (Fennel)</b>
+</p>
+</td>
+</tr>
+
+<tr class="hline">
+<td class="tdl"><kbd>:x-label</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+The label for the x-axis.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:x-label "Time (s)"</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:y-label</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+The label for the y-axis.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:y-label "Velocity (m/s)"</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:z-label</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+The label for the z-axis (for 3D plots).
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:z-label "Height (m)"</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:x-range</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+A table <kbd>[min, max]</kbd> for the x-axis range. Use <kbd>"*"</kbd> for auto-scaling one end.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:x-range [-10 10]</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:y-range</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+A table <kbd>[min, max]</kbd> for the y-axis range.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:y-range [0 "*"]</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:z-range</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+A table <kbd>[min, max]</kbd> for the z-axis range.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:z-range [-2 2]</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:log-scale</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+A string specifying which axes should use a logarithmic scale (e.g., <kbd>"x"</kbd>, <kbd>"xy"</kbd>, <kbd>"z"</kbd>).
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:log-scale "y"</kbd>
+</p>
+</td>
+</tr>
+
+<tr class="tbrule" aria-hidden="true">
+<td class="tdl"></td>
+<td class="tdl"></td>
+<td class="tdp">
+
+</td>
+<td class="tdp">
+
+</td>
+</tr>
+</table>
+
+</div>
+
+</figure>
+<!--
+...... subsection Tics ......
+-->
+<h5 id="autosec-63"><span class="sectionnumber">4.3&#x2003;</span>Tics</h5>
+<a id="fplot_wiki-autopage-63"></a>
+
+
+<figure id="autoid-3" class="table ">
+<div class="center">
+<table>
+
+<tr style="display:none"><th>.</th></tr>
+
+<tr class="tbrule">
+<td class="tdl"><b>Key</b></td>
+<td class="tdl"><b>Type</b></td>
+<td class="tdp">
+
+<p>
+<b>Description</b>
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<b>Example (Fennel)</b>
+</p>
+</td>
+</tr>
+
+<tr class="hline">
+<td class="tdl"><kbd>:tics</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+A map to control global tic settings for axes.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:tics {:xtics "mirror", :ytics "rotate by 90"}</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:xtics</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+Sets custom tic marks for the x-axis. Can be a simple list of values or a list of <kbd>[label, value]</kbd> pairs.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:xtics [["Low" 0] ["Mid" 50] ["High" 100]]</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:ytics</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+Sets custom tic marks for the y-axis.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:ytics [0 10 20 30]</kbd>
+</p>
+</td>
+</tr>
+
+<tr class="tbrule" aria-hidden="true">
+<td class="tdl"></td>
+<td class="tdl"></td>
+<td class="tdp">
+
+</td>
+<td class="tdp">
+
+</td>
+</tr>
+</table>
+
+</div>
+
+</figure>
+<!--
+...... subsection Appearance ......
+-->
+<h5 id="autosec-66"><span class="sectionnumber">4.4&#x2003;</span>Appearance</h5>
+<a id="fplot_wiki-autopage-66"></a>
+
+
+<figure id="autoid-4" class="table ">
+<div class="center">
+<table>
+
+<tr style="display:none"><th>.</th></tr>
+
+<tr class="tbrule">
+<td class="tdl"><b>Key</b></td>
+<td class="tdl"><b>Type</b></td>
+<td class="tdp">
+
+<p>
+<b>Description</b>
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<b>Example (Fennel)</b>
+</p>
+</td>
+</tr>
+
+<tr class="hline">
+<td class="tdl"><kbd>:grid</kbd></td>
+<td class="tdl">boolean</td>
+<td class="tdp">
+
+<p>
+If <kbd>true</kbd>, displays a grid on the plot.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:grid true</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:border</kbd></td>
+<td class="tdl">boolean</td>
+<td class="tdp">
+
+<p>
+If <kbd>true</kbd> (default), displays a border around the plot.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:border false</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:key</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+Controls the plot’s key (legend). Set <kbd>:enabled false</kbd> to hide it.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:key {:enabled true :position "bottom left"}</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:palette</kbd></td>
+<td class="tdl">string</td>
+<td class="tdp">
+
+<p>
+Sets the color palette for 3D plots or color-mapped data.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:palette "defined (0 'blue', 1 'green', 2 'red')"</kbd>
+</p>
+</td>
+</tr>
+
+<tr class="tbrule" aria-hidden="true">
+<td class="tdl"></td>
+<td class="tdl"></td>
+<td class="tdp">
+
+</td>
+<td class="tdp">
+
+</td>
+</tr>
+</table>
+
+</div>
+
+</figure>
+<!--
+...... subsection Advanced ......
+-->
+<h5 id="autosec-69"><span class="sectionnumber">4.5&#x2003;</span>Advanced</h5>
+<a id="fplot_wiki-autopage-69"></a>
+
+
+<figure id="autoid-5" class="table ">
+<div class="center">
+<table>
+
+<tr style="display:none"><th>.</th></tr>
+
+<tr class="tbrule">
+<td class="tdl"><b>Key</b></td>
+<td class="tdl"><b>Type</b></td>
+<td class="tdp">
+
+<p>
+<b>Description</b>
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<b>Example (Fennel)</b>
+</p>
+</td>
+</tr>
+
+<tr class="hline">
+<td class="tdl"><kbd>:labels</kbd></td>
+<td class="tdl">list</td>
+<td class="tdp">
+
+<p>
+A list of tables <kbd>[text, x, y, options]</kbd> to place text labels on the plot.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:labels [["Peak" 1.5 9.8 "center font 'Verdana,10'"]]</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:arrows</kbd></td>
+<td class="tdl">list</td>
+<td class="tdp">
+
+<p>
+A list of tables <kbd>[x1, y1, x2, y2, options]</kbd> to draw arrows.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:arrows [[0 0 1.5 9.8 "head filled"]]</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:objects</kbd></td>
+<td class="tdl">list</td>
+<td class="tdp">
+
+<p>
+A list of tables <kbd>[type, definition]</kbd> to draw geometric shapes.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:objects [["rectangle" "from 0,0 to 1,1 fc rgb 'blue'"]]</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:multiplot</kbd></td>
+<td class="tdl">table</td>
+<td class="tdp">
+
+<p>
+A table to configure a multiplot layout.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:multiplot {:layout [2 2] :title "My Multiplot"}</kbd>
+</p>
+</td>
+</tr>
+
+<tr>
+<td class="tdl"><kbd>:extra-opts</kbd></td>
+<td class="tdl">list</td>
+<td class="tdp">
+
+<p>
+A list of raw gnuplot commands to be inserted into the script.
+</p>
+</td>
+<td class="tdp">
+
+<p>
+<kbd>:extra-opts ["set style data histograms" "set style fill solid"]</kbd>
+</p>
+</td>
+</tr>
+
+<tr class="tbrule" aria-hidden="true">
+<td class="tdl"></td>
+<td class="tdl"></td>
+<td class="tdp">
+
+</td>
+<td class="tdp">
+
+</td>
+</tr>
+</table>
+
+</div>
+
+</figure>
+
+<p>
+For options specific to individual datasets (like line color and style), see the <b>Dataset Configuration</b> section.
+</p>
+
+</section>
+
+</main>
+
+
+<nav class="botnavigation"><a href="fplot_wiki.html" class="linkhome" >
+Home</a></nav>
+
+</div><!-- grid -->
+</body>
+</html>
