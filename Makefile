@@ -144,6 +144,7 @@ compile-tex:
 	@cd tex && lualatex -draftmode "$(FILE).tex" > /dev/null
 	@echo "Compiling $(FILE).tex into $(FILE).pdf (Pass 3: Final PDF)..."
 	@cd tex && lualatex "$(FILE).tex"
+#
 
 auto-run:
 	@test -n "$(FILE)" || (echo "Usage: make auto-run FILE=YourFile" >&2; exit 1)
