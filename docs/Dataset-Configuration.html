@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <body>
 
 
-<a id="fplot_wiki-autopage-72"></a>
+<a id="fplot_wiki-autopage-73"></a>
 <div class="pagegrid">
 
 
@@ -297,50 +297,56 @@ Home</a>
 
 
 <p>
-<a href="Installation.html#autosec-13" class="tocsection" >
+<a href="Installation.html#autosec-14" class="tocsection" >
 <span class="sectionnumber">2</span>&#x2003;Installation</a>
 </p>
 
 
 <p>
-<a href="Getting-Started-Tutorial.html#autosec-33" class="tocsection" >
+<a href="Getting-Started-Tutorial.html#autosec-34" class="tocsection" >
 <span class="sectionnumber">3</span>&#x2003;Getting Started Tutorial</a>
 </p>
 
 
 <p>
-<a href="Configuration-Options.html#autosec-56" class="tocsection" >
+<a href="Configuration-Options.html#autosec-57" class="tocsection" >
 <span class="sectionnumber">4</span>&#x2003;Configuration Options</a>
 </p>
 
 
 <p>
-<a href="Dataset-Configuration.html#autosec-73" class="tocsection" >
+<a href="Dataset-Configuration.html#autosec-74" class="tocsection" >
 <span class="sectionnumber">5</span>&#x2003;Dataset Configuration</a>
 </p>
 
 
 <p>
-<a href="Advanced-Features.html#autosec-93" class="tocsection" >
+<a href="Advanced-Features.html#autosec-94" class="tocsection" >
 <span class="sectionnumber">6</span>&#x2003;Advanced Features</a>
 </p>
 
 
 <p>
-<a href="Examples.html#autosec-131" class="tocsection" >
-<span class="sectionnumber">7</span>&#x2003;Examples</a>
+<a href="Using-Macros-Reusable-Components-with-Fplot.html#autosec-125" class="tocsection" >
+<span class="sectionnumber">7</span>&#x2003;Using Macros and Reusable Components with Fplot</a>
 </p>
 
 
 <p>
-<a href="Biotech-Applications.html#autosec-157" class="tocsection" >
-<span class="sectionnumber">8</span>&#x2003;Biotech Applications</a>
+<a href="Examples.html#autosec-140" class="tocsection" >
+<span class="sectionnumber">8</span>&#x2003;Examples</a>
 </p>
 
 
 <p>
-<a href="Troubleshooting-Guide.html#autosec-171" class="tocsection" >
-<span class="sectionnumber">9</span>&#x2003;Troubleshooting Guide</a>
+<a href="Biotech-Applications.html#autosec-166" class="tocsection" >
+<span class="sectionnumber">9</span>&#x2003;Biotech Applications</a>
+</p>
+
+
+<p>
+<a href="Troubleshooting-Guide.html#autosec-180" class="tocsection" >
+<span class="sectionnumber">10</span>&#x2003;Troubleshooting Guide</a>
 </p>
 
 
@@ -503,13 +509,33 @@ Home</a>
 
 \(\newcommand {\addlinespace }[1][]{}\)
 
+\(\newcommand {\tcbset }[1]{}\)
+
+\(\newcommand {\tcbsetforeverylayer }[1]{}\)
+
+\(\newcommand {\tcbox }[2][]{\boxed {\text {#2}}}\)
+
+\(\newcommand {\tcboxfit }[2][]{\boxed {#2}}\)
+
+\(\newcommand {\tcblower }{}\)
+
+\(\newcommand {\tcbline }{}\)
+
+\(\newcommand {\tcbtitle }{}\)
+
+\(\newcommand {\tcbsubtitle [2][]{\mathrm {#2}}}\)
+
+\(\newcommand {\tcboxmath }[2][]{\boxed {#2}}\)
+
+\(\newcommand {\tcbhighmath }[2][]{\boxed {#2}}\)
+
 </div>
 
 <!--
 ...... section Dataset Configuration ......
 -->
-<h4 id="autosec-73"><span class="sectionnumber">5&#x2003;</span>Dataset Configuration</h4>
-<a id="fplot_wiki-autopage-73"></a>
+<h4 id="autosec-74"><span class="sectionnumber">5&#x2003;</span>Dataset Configuration</h4>
+<a id="fplot_wiki-autopage-74"></a>
 <a id="fplot_wiki-autofile-5"></a>
 
 <p>
@@ -522,8 +548,8 @@ Here is a guide to the options available for configuring an individual dataset.
 <!--
 ...... subsection Core Dataset Properties ......
 -->
-<h5 id="autosec-74"><span class="sectionnumber">5.1&#x2003;</span>Core Dataset Properties</h5>
-<a id="fplot_wiki-autopage-74"></a>
+<h5 id="autosec-75"><span class="sectionnumber">5.1&#x2003;</span>Core Dataset Properties</h5>
+<a id="fplot_wiki-autopage-75"></a>
 
 
 <figure id="autoid-6" class="table ">
@@ -669,8 +695,8 @@ The type of data source. Defaults to <kbd>"inline"</kbd>. Can be set to <kbd>"fi
 <!--
 ...... subsection Styling Properties ......
 -->
-<h5 id="autosec-77"><span class="sectionnumber">5.2&#x2003;</span>Styling Properties</h5>
-<a id="fplot_wiki-autopage-77"></a>
+<h5 id="autosec-78"><span class="sectionnumber">5.2&#x2003;</span>Styling Properties</h5>
+<a id="fplot_wiki-autopage-78"></a>
 
 
 <p>
@@ -786,8 +812,8 @@ The fill style for filled shapes like boxes or histograms.
 <!--
 ...... subsection Data Formats ......
 -->
-<h5 id="autosec-80"><span class="sectionnumber">5.3&#x2003;</span>Data Formats</h5>
-<a id="fplot_wiki-autopage-80"></a>
+<h5 id="autosec-81"><span class="sectionnumber">5.3&#x2003;</span>Data Formats</h5>
+<a id="fplot_wiki-autopage-81"></a>
 
 
 <p>
@@ -796,8 +822,8 @@ The fill style for filled shapes like boxes or histograms.
 <!--
 ...... subsubsection 1. Simple Y-Values (List) ......
 -->
-<h6 id="autosec-81">1. Simple Y-Values (List)</h6>
-<a id="fplot_wiki-autopage-81"></a>
+<h6 id="autosec-82">1. Simple Y-Values (List)</h6>
+<a id="fplot_wiki-autopage-82"></a>
 
 
 <p>
@@ -816,8 +842,8 @@ A simple list of numbers will be plotted against their indices (1, 2, 3, ...).
 <!--
 ...... subsubsection 2. X-Y Pairs (List of Lists/Tables) ......
 -->
-<h6 id="autosec-83">2. X-Y Pairs (List of Lists/Tables)</h6>
-<a id="fplot_wiki-autopage-83"></a>
+<h6 id="autosec-84">2. X-Y Pairs (List of Lists/Tables)</h6>
+<a id="fplot_wiki-autopage-84"></a>
 
 
 <p>
@@ -836,8 +862,8 @@ This is the most common format for 2D plots.
 <!--
 ...... subsubsection 3. Columnar Data (Transposed Table) ......
 -->
-<h6 id="autosec-85">3. Columnar Data (Transposed Table)</h6>
-<a id="fplot_wiki-autopage-85"></a>
+<h6 id="autosec-86">3. Columnar Data (Transposed Table)</h6>
+<a id="fplot_wiki-autopage-86"></a>
 
 
 <p>
@@ -858,8 +884,8 @@ If it’s more convenient to provide data as columns, fplot will automatically t
 <!--
 ...... subsubsection 4. 3D Grid Data (for splot) ......
 -->
-<h6 id="autosec-87">4. 3D Grid Data (for <kbd>splot</kbd>)</h6>
-<a id="fplot_wiki-autopage-87"></a>
+<h6 id="autosec-88">4. 3D Grid Data (for <kbd>splot</kbd>)</h6>
+<a id="fplot_wiki-autopage-88"></a>
 
 
 <p>
@@ -883,8 +909,8 @@ For surface plots (e.g., with <kbd>pm3d</kbd>), provide a list of rows, where ea
 <!--
 ...... subsubsection 5. Data from a File ......
 -->
-<h6 id="autosec-89">5. Data from a File</h6>
-<a id="fplot_wiki-autopage-89"></a>
+<h6 id="autosec-90">5. Data from a File</h6>
+<a id="fplot_wiki-autopage-90"></a>
 
 
 <p>

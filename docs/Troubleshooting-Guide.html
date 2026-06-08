@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <body>
 
 
-<a id="fplot_wiki-autopage-170"></a>
+<a id="fplot_wiki-autopage-179"></a>
 <div class="pagegrid">
 
 
@@ -297,50 +297,56 @@ Home</a>
 
 
 <p>
-<a href="Installation.html#autosec-13" class="tocsection" >
+<a href="Installation.html#autosec-14" class="tocsection" >
 <span class="sectionnumber">2</span>&#x2003;Installation</a>
 </p>
 
 
 <p>
-<a href="Getting-Started-Tutorial.html#autosec-33" class="tocsection" >
+<a href="Getting-Started-Tutorial.html#autosec-34" class="tocsection" >
 <span class="sectionnumber">3</span>&#x2003;Getting Started Tutorial</a>
 </p>
 
 
 <p>
-<a href="Configuration-Options.html#autosec-56" class="tocsection" >
+<a href="Configuration-Options.html#autosec-57" class="tocsection" >
 <span class="sectionnumber">4</span>&#x2003;Configuration Options</a>
 </p>
 
 
 <p>
-<a href="Dataset-Configuration.html#autosec-73" class="tocsection" >
+<a href="Dataset-Configuration.html#autosec-74" class="tocsection" >
 <span class="sectionnumber">5</span>&#x2003;Dataset Configuration</a>
 </p>
 
 
 <p>
-<a href="Advanced-Features.html#autosec-93" class="tocsection" >
+<a href="Advanced-Features.html#autosec-94" class="tocsection" >
 <span class="sectionnumber">6</span>&#x2003;Advanced Features</a>
 </p>
 
 
 <p>
-<a href="Examples.html#autosec-131" class="tocsection" >
-<span class="sectionnumber">7</span>&#x2003;Examples</a>
+<a href="Using-Macros-Reusable-Components-with-Fplot.html#autosec-125" class="tocsection" >
+<span class="sectionnumber">7</span>&#x2003;Using Macros and Reusable Components with Fplot</a>
 </p>
 
 
 <p>
-<a href="Biotech-Applications.html#autosec-157" class="tocsection" >
-<span class="sectionnumber">8</span>&#x2003;Biotech Applications</a>
+<a href="Examples.html#autosec-140" class="tocsection" >
+<span class="sectionnumber">8</span>&#x2003;Examples</a>
 </p>
 
 
 <p>
-<a href="Troubleshooting-Guide.html#autosec-171" class="tocsection" >
-<span class="sectionnumber">9</span>&#x2003;Troubleshooting Guide</a>
+<a href="Biotech-Applications.html#autosec-166" class="tocsection" >
+<span class="sectionnumber">9</span>&#x2003;Biotech Applications</a>
+</p>
+
+
+<p>
+<a href="Troubleshooting-Guide.html#autosec-180" class="tocsection" >
+<span class="sectionnumber">10</span>&#x2003;Troubleshooting Guide</a>
 </p>
 
 
@@ -503,14 +509,34 @@ Home</a>
 
 \(\newcommand {\addlinespace }[1][]{}\)
 
+\(\newcommand {\tcbset }[1]{}\)
+
+\(\newcommand {\tcbsetforeverylayer }[1]{}\)
+
+\(\newcommand {\tcbox }[2][]{\boxed {\text {#2}}}\)
+
+\(\newcommand {\tcboxfit }[2][]{\boxed {#2}}\)
+
+\(\newcommand {\tcblower }{}\)
+
+\(\newcommand {\tcbline }{}\)
+
+\(\newcommand {\tcbtitle }{}\)
+
+\(\newcommand {\tcbsubtitle [2][]{\mathrm {#2}}}\)
+
+\(\newcommand {\tcboxmath }[2][]{\boxed {#2}}\)
+
+\(\newcommand {\tcbhighmath }[2][]{\boxed {#2}}\)
+
 </div>
 
 <!--
 ...... section Troubleshooting Guide ......
 -->
-<h4 id="autosec-171"><span class="sectionnumber">9&#x2003;</span>Troubleshooting Guide</h4>
-<a id="fplot_wiki-autopage-171"></a>
-<a id="fplot_wiki-autofile-9"></a>
+<h4 id="autosec-180"><span class="sectionnumber">10&#x2003;</span>Troubleshooting Guide</h4>
+<a id="fplot_wiki-autopage-180"></a>
+<a id="fplot_wiki-autofile-10"></a>
 
 <p>
 This guide provides solutions to common problems you might encounter when using <kbd>fplot</kbd> in different environments.
@@ -518,13 +544,13 @@ This guide provides solutions to common problems you might encounter when using 
 <!--
 ...... subsection General Issues ......
 -->
-<h5 id="autosec-172"><span class="sectionnumber">9.1&#x2003;</span>General Issues</h5>
-<a id="fplot_wiki-autopage-172"></a>
+<h5 id="autosec-181"><span class="sectionnumber">10.1&#x2003;</span>General Issues</h5>
+<a id="fplot_wiki-autopage-181"></a>
 <!--
 ...... subsubsection Problem: gnuplot not found or command fails. ......
 -->
-<h6 id="autosec-173">Problem: <kbd>gnuplot</kbd> not found or command fails.</h6>
-<a id="fplot_wiki-autopage-173"></a>
+<h6 id="autosec-182">Problem: <kbd>gnuplot</kbd> not found or command fails.</h6>
+<a id="fplot_wiki-autopage-182"></a>
 
 
 <p>
@@ -563,8 +589,8 @@ to the full, absolute path of the <kbd>gnuplot</kbd> executable on your system.
 <!--
 ...... subsubsection Problem: The plot window appears and immediately closes. ......
 -->
-<h6 id="autosec-174">Problem: The plot window appears and immediately closes.</h6>
-<a id="fplot_wiki-autopage-174"></a>
+<h6 id="autosec-183">Problem: The plot window appears and immediately closes.</h6>
+<a id="fplot_wiki-autopage-183"></a>
 
 
 <p>
@@ -578,8 +604,8 @@ manually, make sure to use the -p flag: <kbd>gnuplot -p your_script.gp</kbd>.
 <!--
 ...... subsection MSYS2 (on Windows) ......
 -->
-<h5 id="autosec-175"><span class="sectionnumber">9.2&#x2003;</span>MSYS2 (on Windows)</h5>
-<a id="fplot_wiki-autopage-175"></a>
+<h5 id="autosec-184"><span class="sectionnumber">10.2&#x2003;</span>MSYS2 (on Windows)</h5>
+<a id="fplot_wiki-autopage-184"></a>
 
 
 <p>
@@ -588,8 +614,8 @@ The MSYS2 environment can be tricky because of how it handles file paths.
 <!--
 ...... subsubsection Problem: fplot fails with errors like "Can't open script file" or "Cannot find data file". ......
 -->
-<h6 id="autosec-176">Problem: <kbd>fplot</kbd> fails with errors like ”Can’t open script file” or ”Cannot find data file”.</h6>
-<a id="fplot_wiki-autopage-176"></a>
+<h6 id="autosec-185">Problem: <kbd>fplot</kbd> fails with errors like ”Can’t open script file” or ”Cannot find data file”.</h6>
+<a id="fplot_wiki-autopage-185"></a>
 
 
 <p>
@@ -647,8 +673,8 @@ fix.
 <!--
 ...... subsection WSL2 (Windows Subsystem for Linux) ......
 -->
-<h5 id="autosec-179"><span class="sectionnumber">9.3&#x2003;</span>WSL2 (Windows Subsystem for Linux)</h5>
-<a id="fplot_wiki-autopage-179"></a>
+<h5 id="autosec-188"><span class="sectionnumber">10.3&#x2003;</span>WSL2 (Windows Subsystem for Linux)</h5>
+<a id="fplot_wiki-autopage-188"></a>
 
 
 <p>
@@ -745,8 +771,8 @@ export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk &apos;{print $2; e
 <!--
 ...... subsection Native Linux / macOS ......
 -->
-<h5 id="autosec-182"><span class="sectionnumber">9.4&#x2003;</span>Native Linux / macOS</h5>
-<a id="fplot_wiki-autopage-182"></a>
+<h5 id="autosec-191"><span class="sectionnumber">10.4&#x2003;</span>Native Linux / macOS</h5>
+<a id="fplot_wiki-autopage-191"></a>
 
 
 <p>
@@ -755,8 +781,8 @@ export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk &apos;{print $2; e
 <!--
 ...... subsubsection Problem: fplot complains about a missing terminal type (e.g., "Terminal type set to 'unknown'"). ......
 -->
-<h6 id="autosec-183">Problem: <kbd>fplot</kbd> complains about a missing terminal type (e.g., ”Terminal type set to ’unknown’”).</h6>
-<a id="fplot_wiki-autopage-183"></a>
+<h6 id="autosec-192">Problem: <kbd>fplot</kbd> complains about a missing terminal type (e.g., ”Terminal type set to ’unknown’”).</h6>
+<a id="fplot_wiki-autopage-192"></a>
 
 
 <p>
@@ -796,13 +822,13 @@ You can check which terminals your <kbd>gnuplot</kbd> supports by running <kbd>g
 <!--
 ...... subsection A Note on Gnuplot Terminals (GUI Backends) ......
 -->
-<h5 id="autosec-184"><span class="sectionnumber">9.5&#x2003;</span>A Note on Gnuplot Terminals (GUI Backends)</h5>
-<a id="fplot_wiki-autopage-184"></a>
+<h5 id="autosec-193"><span class="sectionnumber">10.5&#x2003;</span>A Note on Gnuplot Terminals (GUI Backends)</h5>
+<a id="fplot_wiki-autopage-193"></a>
 <!--
 ...... subsubsection Problem: A plot window appears, but it's buggy, slow, or doesn't appear at all, even though gnuplot is installed correctly. ......
 -->
-<h6 id="autosec-185">Problem: A plot window appears, but it’s buggy, slow, or doesn’t appear at all, even though <kbd>gnuplot</kbd> is installed correctly.</h6>
-<a id="fplot_wiki-autopage-185"></a>
+<h6 id="autosec-194">Problem: A plot window appears, but it’s buggy, slow, or doesn’t appear at all, even though <kbd>gnuplot</kbd> is installed correctly.</h6>
+<a id="fplot_wiki-autopage-194"></a>
 
 
 <p>
@@ -840,6 +866,33 @@ If you suspect this is the issue, you can force <kbd>fplot</kbd> to use a differ
 This is a powerful troubleshooting step. If the default <kbd>wxt</kbd> terminal fails, try <kbd>qt</kbd>. If <kbd>qt</kbd> fails, try <kbd>x11</kbd> (on Linux). Make sure you have the necessary support libraries installed for
 the terminal you want to use (e.g., the <kbd>gnuplot-qt</kbd> package on Debian/Ubuntu for the <kbd>qt</kbd> terminal).
 </p>
+<!--
+...... section References ......
+-->
+<h4 id="autosec-196">References</h4>
+<a id="fplot_wiki-autopage-196"></a>
+
+
+<ul class="list" style="list-style-type:none">
+
+
+<li>
+<p>
+<a id="LWR-ht-cite.0@altschul1990blast"></a>Altschul, Stephen F. et al. (1990). “Basic Local Alignment Search Tool”. In: <em>Journal of Molecular Biology</em> 215.3, pp. 403–410. <span class="textsc">doi</span>: <a
+href="https://doi.org/10.1016/S0022-2836(05)80360-2" target="_blank" >10.1016/S0022-2836(05)80360-2</a>.
+</p>
+
+
+</li>
+<li>
+
+
+<p>
+<a id="LWR-ht-cite.0@ncbiblast"></a>National Center for Biotechnology Information (2025). <em>BLAST: Basic Local Alignment Search Tool</em>. <span class="textsc">url</span>: <a
+href="https://blast.ncbi.nlm.nih.gov/Blast.cgi" target="_blank" >https://blast.ncbi.nlm.nih.gov/Blast.cgi</a> (visited on 06/07/2026).
+</p>
+</li>
+</ul>
 
 <a id="fplot_wiki-autofile-last"></a>
 </section>

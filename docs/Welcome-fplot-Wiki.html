@@ -297,50 +297,56 @@ Home</a>
 
 
 <p>
-<a href="Installation.html#autosec-13" class="tocsection" >
+<a href="Installation.html#autosec-14" class="tocsection" >
 <span class="sectionnumber">2</span>&#x2003;Installation</a>
 </p>
 
 
 <p>
-<a href="Getting-Started-Tutorial.html#autosec-33" class="tocsection" >
+<a href="Getting-Started-Tutorial.html#autosec-34" class="tocsection" >
 <span class="sectionnumber">3</span>&#x2003;Getting Started Tutorial</a>
 </p>
 
 
 <p>
-<a href="Configuration-Options.html#autosec-56" class="tocsection" >
+<a href="Configuration-Options.html#autosec-57" class="tocsection" >
 <span class="sectionnumber">4</span>&#x2003;Configuration Options</a>
 </p>
 
 
 <p>
-<a href="Dataset-Configuration.html#autosec-73" class="tocsection" >
+<a href="Dataset-Configuration.html#autosec-74" class="tocsection" >
 <span class="sectionnumber">5</span>&#x2003;Dataset Configuration</a>
 </p>
 
 
 <p>
-<a href="Advanced-Features.html#autosec-93" class="tocsection" >
+<a href="Advanced-Features.html#autosec-94" class="tocsection" >
 <span class="sectionnumber">6</span>&#x2003;Advanced Features</a>
 </p>
 
 
 <p>
-<a href="Examples.html#autosec-131" class="tocsection" >
-<span class="sectionnumber">7</span>&#x2003;Examples</a>
+<a href="Using-Macros-Reusable-Components-with-Fplot.html#autosec-125" class="tocsection" >
+<span class="sectionnumber">7</span>&#x2003;Using Macros and Reusable Components with Fplot</a>
 </p>
 
 
 <p>
-<a href="Biotech-Applications.html#autosec-157" class="tocsection" >
-<span class="sectionnumber">8</span>&#x2003;Biotech Applications</a>
+<a href="Examples.html#autosec-140" class="tocsection" >
+<span class="sectionnumber">8</span>&#x2003;Examples</a>
 </p>
 
 
 <p>
-<a href="Troubleshooting-Guide.html#autosec-171" class="tocsection" >
-<span class="sectionnumber">9</span>&#x2003;Troubleshooting Guide</a>
+<a href="Biotech-Applications.html#autosec-166" class="tocsection" >
+<span class="sectionnumber">9</span>&#x2003;Biotech Applications</a>
+</p>
+
+
+<p>
+<a href="Troubleshooting-Guide.html#autosec-180" class="tocsection" >
+<span class="sectionnumber">10</span>&#x2003;Troubleshooting Guide</a>
 </p>
 
 
@@ -503,6 +509,26 @@ Home</a>
 
 \(\newcommand {\addlinespace }[1][]{}\)
 
+\(\newcommand {\tcbset }[1]{}\)
+
+\(\newcommand {\tcbsetforeverylayer }[1]{}\)
+
+\(\newcommand {\tcbox }[2][]{\boxed {\text {#2}}}\)
+
+\(\newcommand {\tcboxfit }[2][]{\boxed {#2}}\)
+
+\(\newcommand {\tcblower }{}\)
+
+\(\newcommand {\tcbline }{}\)
+
+\(\newcommand {\tcbtitle }{}\)
+
+\(\newcommand {\tcbsubtitle [2][]{\mathrm {#2}}}\)
+
+\(\newcommand {\tcboxmath }[2][]{\boxed {#2}}\)
+
+\(\newcommand {\tcbhighmath }[2][]{\boxed {#2}}\)
+
 </div>
 
 <!--
@@ -515,11 +541,58 @@ Home</a>
 <p>
 <b>fplot</b> is a plotting library for Fennel and Lua that makes it easy to create a wide range of plots using Gnuplot. This wiki provides comprehensive documentation to help you get started making the most of its features.
 </p>
+
+
+<div
+    class="tcolorbox"
+    style=" border: 1px solid #BF0000; background: #FFFFE5; "
+>
+
+
+<div
+    class="tcolorboxtitle"
+    style=" border-top: 1px solid #BF0000; border-bottom: 1px solid #BF0000; background: #BF0000; color: #FFFFFF; "
+>
+
+<p>
+Documentation Notice
+</p>
+</div>
+
+
+<div
+    class="tcolorboxupper"
+    style=" color: #000000; "
+>
+
+<p>
+Currently, the fplot pages are just a mirror of the fplot wiki. Future updates will reorganize this structure to better suit a standalone manual. Additionally, we will add more examples of biotech related plots, such as standard
+curves for electrophoresis. Gnuplot’s curve fitting in this context is usually done with the fit command, which performs non-linear least-squares curve fitting using the Marquardt-Levenberg algorithm. Additionally, we may include
+plots which are relevant to NCBI BLAST, such as distance tree/cladogram, pairwise alignment view, description table (with scores, E-values, percent identity, etc), and circos plots as they relate to flow cytometry.
+</p>
+</div>
+
+</div>
+
+<p>
+
+</p>
+<div role="note" class="footnotes">
+
+<a id="fplot_wiki-autopage-6"></a>
+<p>
+<sup></sup>&nbsp;Basic Local Alignment Search Tool (NCBI BLAST) is a bioinformatics program that finds regions of local similarity between biological sequences. In other words, it compares nucleotide or protein sequences to
+sequence databases and calculates the statistical significance of matches. National Center for Biotechnology Information <a href="Troubleshooting-Guide.html#LWR-ht-cite.0@ncbiblast">2025</a> Altschul et al. <a
+href="Troubleshooting-Guide.html#LWR-ht-cite.0@altschul1990blast">1990</a>
+</p>
+
+
+</div>
 <!--
 ...... subsection Getting Started ......
 -->
-<h5 id="autosec-6">Getting Started</h5>
-<a id="fplot_wiki-autopage-6"></a>
+<h5 id="autosec-7">Getting Started</h5>
+<a id="fplot_wiki-autopage-7"></a>
 
 
 <p>
@@ -544,8 +617,8 @@ If you’re new to <kbd>fplot</kbd>, here are a few pages to get you up and runn
 <!--
 ...... subsection Core Concepts ......
 -->
-<h5 id="autosec-7">Core Concepts</h5>
-<a id="fplot_wiki-autopage-7"></a>
+<h5 id="autosec-8">Core Concepts</h5>
+<a id="fplot_wiki-autopage-8"></a>
 
 
 <p>
@@ -570,8 +643,8 @@ Understanding these two concepts is key to using <kbd>fplot</kbd> effectively:
 <!--
 ...... subsection Advanced Topics ......
 -->
-<h5 id="autosec-8">Advanced Topics</h5>
-<a id="fplot_wiki-autopage-8"></a>
+<h5 id="autosec-9">Advanced Topics</h5>
+<a id="fplot_wiki-autopage-9"></a>
 
 
 <p>
@@ -607,8 +680,8 @@ Once you’ve mastered the basics, you can explore more advanced features:
 <!--
 ...... subsection Why fplot? ......
 -->
-<h5 id="autosec-10">Why fplot?</h5>
-<a id="fplot_wiki-autopage-10"></a>
+<h5 id="autosec-11">Why fplot?</h5>
+<a id="fplot_wiki-autopage-11"></a>
 
 
 <p>
@@ -619,8 +692,8 @@ readable, but more importantly, it makes your plots composable: you can build, c
 <!--
 ...... subsection Why Fennel? ......
 -->
-<h5 id="autosec-11">Why Fennel?</h5>
-<a id="fplot_wiki-autopage-11"></a>
+<h5 id="autosec-12">Why Fennel?</h5>
+<a id="fplot_wiki-autopage-12"></a>
 
 
 <p>

@@ -136,10 +136,13 @@ find-html-deps:
 	@grep -oE '(href|src)="[^"]+"' 'tex/$(FILE).html'
 
 compile-tex:
-	@echo "Compiling $(FILE).tex into $(FILE).pdf..."
-	@cd tex && lualatex "$(FILE).tex"
-	@cd tex && biber "$(FILE)"
-	@cd tex && lualatex "$(FILE).tex"
+	@echo "Compiling $(FILE).tex into $(FILE).pdf (Pass 1: Draft)..."
+	@cd tex && lualatex -draftmode "$(FILE).tex" > /dev/null
+	@echo "Running Biber..."
+	@cd tex && biber "$(FILE)" > /dev/null
+	@echo "Compiling $(FILE).tex into $(FILE).pdf (Pass 2: Draft for TOC/Refs)..."
+	@cd tex && lualatex -draftmode "$(FILE).tex" > /dev/null
+	@echo "Compiling $(FILE).tex into $(FILE).pdf (Pass 3: Final PDF)..."
 	@cd tex && lualatex "$(FILE).tex"
 
 auto-run:
@@ -155,4 +158,3 @@ auto-run:
 	@rm $(FILE).pdf 2>/dev/null || true
 	@echo "FILE=$(FILE): completed."
 
-#

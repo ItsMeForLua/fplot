@@ -5,7 +5,7 @@
 <meta charset="UTF-8" />
 <meta name="generator" content="LaTeX Lwarp package" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>fplot Manual — Examples</title>
+<title>fplot Manual — Using Macros and Reusable Components with Fplot</title>
 <link rel="stylesheet" type="text/css" href="lwarp.css" />
 
 <script>
@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <body>
 
 
-<a id="fplot_wiki-autopage-139"></a>
+<a id="fplot_wiki-autopage-124"></a>
 <div class="pagegrid">
 
 
@@ -532,408 +532,246 @@ Home</a>
 </div>
 
 <!--
-...... section Examples ......
+...... section Using Macros and Reusable Components with Fplot ......
 -->
-<h4 id="autosec-140"><span class="sectionnumber">8&#x2003;</span>Examples</h4>
-<a id="fplot_wiki-autopage-140"></a>
-<a id="fplot_wiki-autofile-8"></a>
+<h4 id="autosec-125"><span class="sectionnumber">7&#x2003;</span>Using Macros and Reusable Components with Fplot</h4>
+<a id="fplot_wiki-autopage-125"></a>
+<a id="fplot_wiki-autofile-7"></a>
 
 <p>
-This page provides a gallery of examples to showcase the kinds of plots you can create with <kbd>fplot</kbd>. Each example includes the code in both Fennel and Lua, along with the resulting plot.
+A key advantage of using a programmatic plotting library like <kbd>fplot</kbd> is the ability to create reusable, composable components. This page explains the difference between Gnuplot’s native macros and the more flexible
+approach of using Fennel (or Lua) to manage your plotting.
 </p>
 <!--
-...... subsection 1. Line and Point Plot ......
+...... subsection Fennel Macros vs. Lua Functions: A Quick Clarification ......
 -->
-<h5 id="autosec-141"><span class="sectionnumber">8.1&#x2003;</span>1. Line and Point Plot</h5>
-<a id="fplot_wiki-autopage-141"></a>
+<h5 id="autosec-126"><span class="sectionnumber">7.1&#x2003;</span>Fennel Macros vs. Lua Functions: A Quick Clarification</h5>
+<a id="fplot_wiki-autopage-126"></a>
 
 
 <p>
-A standard plot combining smooth lines and distinct data points.
+It’s important to clarify the term ”macro.”
 </p>
+
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> <b>Fennel</b>, as a Lisp, has a <b>true macro system</b>. This means Fennel macros are code that writes code, running at <b>compile-time</b> to transform your program before it
+even becomes Lua. This allows you to create new syntax and fundamentally change how the language works for your specific needs.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> <b>Lua</b>, on the other hand, does not have a macro system. When we talk about creating ”macros” in a Lua context for <kbd>fplot</kbd>, we are using the term informally to describe
+a powerful <b>runtime</b> pattern: <b>reusable functions that generate complex data structures</b> (like tables for options or datasets). We’ll refer to these as ”reusable components” or ”factory functions” in the Lua
+examples.
+</p>
+</li>
+</ul>
 <!--
-...... subsubsection Fennel ......
+...... subsection Gnuplot's Native Macros ......
 -->
-<h6 id="autosec-142">Fennel</h6>
-<a id="fplot_wiki-autopage-142"></a>
+<h5 id="autosec-127"><span class="sectionnumber">7.2&#x2003;</span>Gnuplot’s Native Macros</h5>
+<a id="fplot_wiki-autopage-127"></a>
+
+
+<p>
+Gnuplot has a built-in macro system using the <kbd>@</kbd> character (e.g., <kbd>plot @my_macro</kbd>). While <kbd>fplot</kbd> does not have a feature to directly use these macros in the plot command, you can still
+<b>define</b> them using the <kbd>:extra-opts</kbd> table.
+</p>
+
+<p>
+This is useful if you have existing Gnuplot scripts or need to set a simple string substitution.
+</p>
 <div class="figurecaption">
 
 </div>
 <pre class="programlisting">
-(local fplot (require :fplot))
-
-(local data1 [])
-(for [i 0 50]
-(let [x (* i 0.2)]
-(table.insert data1 [x (* (math.exp (* -0.1 x)) (math.cos x))])))
-
-(local data2 [[1 0.5] [3 0.1] [5 -0.2] [7 -0.1] [9 0.05]])
-
 (fplot.plot
-{:options {:title "Damped Oscillation with Data Points"
-                :x-label "Time"
-                :y-label "Amplitude"
-                :grid true
-                :key {:position "top right"}}
-        :datasets [{:title "Model"
-                :style "lines"
-                :color "blue"
-                :data data1}
-        {:title "Measurements"
-                :style "points"
-                :color "red"
-                :pointtype 7
-                :data data2}]})
-
-</pre>
-
-    <div class="figurecaption">
-</div>
-<!--
-...... subsubsection Lua ......
--->
-<h6 id="autosec-144">Lua</h6>
-<a id="fplot_wiki-autopage-144"></a>
-<div class="figurecaption">
-
-</div>
-<pre class="programlisting">
-require("fennel").install()
-local fplot = require("fplot")
-
-local data1 = {}
-for i = 0, 50 do
-local x = i * 0.2
-table.insert(data1, {x, math.exp(-0.1 * x) * math.cos(x)})
-end
-
-local data2 = {{1, 0.5}, {3, 0.1}, {5, -0.2}, {7, -0.1}, {9, 0.05}}
-
-fplot.plot({
-        options = {
-                title = "Damped Oscillation with Data Points",
-                x_label = "Time",
-                y_label = "Amplitude",
-                grid = true,
-                key = {position = "top right"}
-        },
-        datasets = {
-                {
-                        title = "Model",
-                        style = "lines",
-                        color = "blue",
-                        data = data1
-                },
-                {
-                        title = "Measurements",
-                        style = "points",
-                        color = "red",
-                        pointtype = 7,
-                        data = data2
-                }
-        }
-})
-
-
-</pre>
-
-    <div class="figurecaption">
-</div>
-
-<figure id="autoid-12" class="figure ">
-<div class="center">
-
-<p>
-
-<a href="imgs/P8.ex.Plot1.png" target="_blank" ><img
-    src="imgs/P8.ex.Plot1.png"
-    style="
-    width:260pt;
-    "
-    class="inlineimage"
-    alt="(image)"
-></a>
-</p>
-
-
-<div class="figurecaption">
-Figure&nbsp;5: The resulting plot generated by fplot
-
-</div>
-
-</div>
-
-</figure>
-
-<p>
-<span
-    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
-><!----></span>
-</p>
-<!--
-...... subsection 2. Bar Chart / Histogram ......
--->
-<h5 id="autosec-147"><span class="sectionnumber">8.2&#x2003;</span>2. Bar Chart / Histogram</h5>
-<a id="fplot_wiki-autopage-147"></a>
-
-
-<p>
-Creating a bar chart using the <kbd>boxes</kbd> style, which is great for categorical data.
-</p>
-<!--
-...... subsubsection Fennel ......
--->
-<h6 id="autosec-148">Fennel</h6>
-<a id="fplot_wiki-autopage-148"></a>
-<div class="figurecaption">
-
-</div>
-<pre class="programlisting">
-(local fplot (require :fplot))
-
-(fplot.plot
-{:options {:title "Annual Production by Factory"
-                :y-label "Units Produced"
-                :x-range [0.5 4.5]
-                :y-range [0 50000]
-                :xtics [["North" 1] ["South" 2] ["East" 3] ["West" 4]]
-                :extra-opts ["set style fill solid 0.8"]}
-        :datasets [{:title "Production"
-                :style "boxes"
-                :data [[1 42000] [2 35000] [3 48000] [4 29000]]}]})
-
-</pre>
-
-    <div class="figurecaption">
-</div>
-<!--
-...... subsubsection Lua ......
--->
-<h6 id="autosec-150">Lua</h6>
-<a id="fplot_wiki-autopage-150"></a>
-<div class="figurecaption">
-
-</div>
-<pre class="programlisting">
-require("fennel").install()
-local fplot = require("fplot")
-
-fplot.plot({
-        options = {
-                title = "Annual Production by Factory",
-                y_label = "Units Produced",
-                x_range = {0.5, 4.5},
-                y_range = {0, 50000},
-                xtics = {{"North", 1}, {"South", 2}, {"East", 3}, {"West", 4}},
-                extra_opts = {"set style fill solid 0.8"}
-        },
-        datasets = {
-                {
-                        title = "Production",
-                        style = "boxes",
-                        data = {{1, 42000}, {2, 35000}, {3, 48000}, {4, 29000}}
-                }
-        }
+{:options {:title "Plotting with a Gnuplot Macro"
+                :x-range [-5 5]
+                ;; Define the macro here
+                :extra-opts ["my_func = &apos;sin(x) / x&apos;"]}
+        ;; ...
 })
 
 </pre>
 
     <div class="figurecaption">
 </div>
+<!--
+...... subsection Fennel: The Real Macro System ......
+-->
+<h5 id="autosec-129"><span class="sectionnumber">7.3&#x2003;</span>Fennel: The Real Macro System</h5>
+<a id="fplot_wiki-autopage-129"></a>
 
-<figure id="autoid-13" class="figure ">
-<div class="center">
 
 <p>
-
-<a href="imgs/P8.ex.Plot2.png" target="_blank" ><img
-    src="imgs/P8.ex.Plot2.png"
-    style="
-    width:260pt;
-    "
-    class="inlineimage"
-    alt="(image)"
-></a>
-</p>
-
-
-<div class="figurecaption">
-Figure&nbsp;6: The resulting plot generated by fplot
-
-</div>
-
-</div>
-
-</figure>
-
-<p>
-<span
-    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
-><!----></span>
+The true power of fplot comes from using Fennel itself to create reusable components. Because Fennel has a true macro system, you can create very powerful abstractions. But for most plotting scenerios, simple functions that just
+return tables are usually more than enough.
 </p>
 <!--
-...... subsection 3. 3D Surface Plot ......
+...... subsubsection 1. Reusable Data Generators ......
 -->
-<h5 id="autosec-153"><span class="sectionnumber">8.3&#x2003;</span>3. 3D Surface Plot</h5>
-<a id="fplot_wiki-autopage-153"></a>
+<h6 id="autosec-130">1. Reusable Data Generators</h6>
+<a id="fplot_wiki-autopage-130"></a>
 
 
 <p>
-Using <kbd>fplot.splot</kbd> to visualize three-dimensional data.
+You can write functions that generate complex datasets.
 </p>
-<!--
-...... subsubsection Fennel ......
--->
-<h6 id="autosec-154">Fennel</h6>
-<a id="fplot_wiki-autopage-154"></a>
 <div class="figurecaption">
 
 </div>
 <pre class="programlisting">
-(local fplot (require :fplot))
-
-(local data [])
-(for [i -20 20]
-(let [x (* i 0.5)
+;; A function for generating sinc data
+(fn generate-sinc-data [steps]
+(let [data []
+step-size (/ 40 steps)]
+(for [i (- (/ steps 2)) (/ steps 2)]
+(let [x (* i step-size)
 row []]
-(for [j -20 20]
-(let [y (* j 0.5)
-r (+ (math.sqrt (+ (* x x) (* y y))) 1e-6)
+(for [j (- (/ steps 2)) (/ steps 2)]
+(let [y (* j step-size)
+r (+ (math.sqrt (+ (* x x) (* y y))) 1e-9)
 z (/ (math.sin r) r)]
 (table.insert row [x y z])))
 (table.insert data row)))
+data))
 
-(fplot.splot
-{:options {:title "Sinc Function"
-                :z-label "z"
-                :palette "viridis"}
-        :datasets [{:data data
-                :style "pm3d"
-                :title ""}]})
+;; Use the data generator
+(local sinc-data (generate-sinc-data 40))
+(fplot.splot {:options {:title "Sinc Function"}
+        :datasets [{:data sinc-data :style "pm3d"}]})
 
 </pre>
 
     <div class="figurecaption">
 </div>
 <!--
-...... subsubsection Lua ......
+...... subsubsection 2. Reusable Style Templates ......
 -->
-<h6 id="autosec-156">Lua</h6>
-<a id="fplot_wiki-autopage-156"></a>
+<h6 id="autosec-132">2. Reusable Style Templates</h6>
+<a id="fplot_wiki-autopage-132"></a>
+
+
+<p>
+Create functions that return tables with your preferred plot options. This allows you to maintain a consistent style across many different plots.
+</p>
 <div class="figurecaption">
 
 </div>
 <pre class="programlisting">
-require("fennel").install()
-local fplot = require("fplot")
+;; A function for a publication-quality plot style
+(fn publication-style [title]
+{:title title
+        :font "Helvetica,14"
+        :border true
+        :grid true})
 
-local data = {}
-for i = -20, 20 do
-local x = i * 0.5
-local row = {}
-for j = -20, 20 do
-local y = j * 0.5
-local r = math.sqrt(x*x + y*y) + 1e-6
-local z = math.sin(r) / r
-table.insert(row, {x, y, z})
-end
-table.insert(data, row)
-end
-
-fplot.splot({
-        options = {
-                title = "Sinc Function",
-                z_label = "z",
-                palette = "viridis"
-        },
-        datasets = {
-                {
-                        data = data,
-                        style = "pm3d",
-                        title = ""
-                }
-        }
-})
+;; Use the style template by calling the function
+(fplot.plot
+{:options (publication-style "My Publication Plot")
+        :datasets [...]})
 
 </pre>
 
     <div class="figurecaption">
 </div>
+<!--
+...... subsubsection 3. Putting It All Together ......
+-->
+<h6 id="autosec-134">3. Putting It All Together</h6>
+<a id="fplot_wiki-autopage-134"></a>
 
-<figure id="autoid-14" class="figure ">
-<div class="center">
 
 <p>
-
-<a href="imgs/P1.P8.ex.Plot1.Plot3.png" target="_blank" ><img
-    src="imgs/P1.P8.ex.Plot1.Plot3.png"
-    style="
-    width:260pt;
-    "
-    class="inlineimage"
-    alt="(image)"
-></a>
-</p>
-
-
-<div class="figurecaption">
-Figure&nbsp;7: The resulting plot generated by fplot
-
-</div>
-
-</div>
-
-</figure>
-
-<p>
-<span
-    style="background:black; width:1012pt ; height:1pt ; display:inline-block;"
-><!----></span>
+The real magic happens when you combine these components. You can define a base style, a plot-specific style, and then merge them together. The example below is a complete, and runnable script. Feel free to try it!
 </p>
 <!--
-...... subsection 4. Logarithmic Scale Plot ......
+...... paragraph Fennel ......
 -->
-<h5 id="autosec-159"><span class="sectionnumber">8.4&#x2003;</span>4. Logarithmic Scale Plot</h5>
-<a id="fplot_wiki-autopage-159"></a>
 
 
 <p>
-Useful for visualizing data that spans several orders of magnitude.
+<span class="paragraph" id="autosec-135">Fennel</span>
+<a id="fplot_wiki-autopage-135"></a>
+
 </p>
-<!--
-...... subsubsection Fennel ......
--->
-<h6 id="autosec-160">Fennel</h6>
-<a id="fplot_wiki-autopage-160"></a>
 <div class="figurecaption">
 
 </div>
 <pre class="programlisting">
 (local fplot (require :fplot))
 
-(local data [])
-(for [x 1 100]
-(table.insert data [x (* 1000 (math.exp (* -0.1 x)))]))
+;; Helper function to recursively clone a table.
+(fn table-clone [tbl]
+(let [copy {}]
+(each [k v (pairs tbl)]
+(tset copy k (if (= (type v) "table") (table-clone v) v)))
+copy))
 
-(fplot.plot
-{:options {:title "Exponential Decay"
-                :x-label "Time"
-                :y-label "Value"
-                :log-scale "y"
-                :grid true}
-        :datasets [{:title "Decay"
-                :style "lines"
-                :data data}]})
+;; Helper function to merge tables.
+(fn merge-tables [a b]
+(let [result (table-clone a)]
+(each [k v (pairs b)]
+(if (and (= (type v) "table") (= (type (. result k)) "table"))
+(tset result k (merge-tables (. result k) v))
+(tset result k v)))
+result))
+
+;; --- Our Reusable Components ---
+(fn generate-line-data [num-points]
+(let [data []]
+(for [i 1 num-points]
+(table.insert data [i (math.random)]))
+data))
+
+(fn base-style []
+{:font "Arial,12"
+        :grid true
+        :output-type "pngcairo"
+        :size [800 600]})
+
+(fn scatter-plot-style []
+{:style "points"
+        :pointtype 7
+        :color "#3366cc"})
+
+;; --- The Plotting Script ---
+(local my-data (generate-line-data 100))
+
+(local plot-specific-opts
+{:title "My Composed Plot"
+        :x-label "Index"
+        :y-label "Random Value"
+        :output-file "my-composed-plot.png"})
+
+(local final-options (merge-tables (base-style) plot-specific-opts))
+(local final-dataset (merge-tables (scatter-plot-style) {:data my-data}))
+
+(fplot.plot {:options final-options
+        :datasets [final-dataset]})
+
+(print "Plot generated at my-new-composed-plot.png")
 
 </pre>
 
     <div class="figurecaption">
 </div>
 <!--
-...... subsubsection Lua ......
+...... paragraph The Lua Equivalent: Reusable Functions ......
 -->
-<h6 id="autosec-162">Lua</h6>
-<a id="fplot_wiki-autopage-162"></a>
+
+
+<p>
+<span class="paragraph" id="autosec-137">The Lua Equivalent: Reusable Functions</span>
+<a id="fplot_wiki-autopage-137"></a>
+
+</p>
 <div class="figurecaption">
 
 </div>
@@ -941,57 +779,81 @@ Useful for visualizing data that spans several orders of magnitude.
 require("fennel").install()
 local fplot = require("fplot")
 
-local data = {}
-for x = 1, 100 do
-table.insert(data, {x, 1000 * math.exp(-0.1 * x)})
+-- Helper functions
+local function table_clone(tbl)
+local copy = {}
+for k, v in pairs(tbl) do
+if type(v) == "table" then
+copy[k] = table_clone(v)
+else
+copy[k] = v
+end
+end
+return copy
 end
 
+local function merge_tables(a, b)
+local result = table_clone(a)
+for k, v in pairs(b) do
+if type(v) == "table" and type(result[k]) == "table" then
+result[k] = merge_tables(result[k], v)
+else
+result[k] = v
+end
+end
+return result
+end
+
+-- --- Our Reusable Components ---
+local function generate_line_data(num_points)
+local data = {}
+for i = 1, num_points do
+table.insert(data, {i, math.random()})
+end
+return data
+end
+
+local function base_style()
+return {
+         font = "Arial,12",
+         grid = true,
+         ["output-type"] = "pngcairo",
+         size = {800, 600}
+}
+end
+
+local function scatter_plot_style()
+return {
+         style = "points",
+         pointtype = 7,
+         color = "#3366cc"
+}
+end
+
+-- --- The Plotting Script ---
+local my_data = generate_line_data(100)
+
+local plot_specific_opts = {
+        title = "My Composed Plot",
+        ["x-label"] = "Index",
+        ["y-label"] = "Random Value",
+        ["output-file"] = "my-composed-plot.png"
+}
+
+local final_options = merge_tables(base_style(), plot_specific_opts)
+local final_dataset = merge_tables(scatter_plot_style(), {data = my_data})
+
 fplot.plot({
-        options = {
-                title = "Exponential Decay",
-                x_label = "Time",
-                y_label = "Value",
-                log_scale = "y",
-                grid = true
-        },
-        datasets = {
-                {
-                        title = "Decay",
-                        style = "lines",
-                        data = data
-                }
-        }
+        options = final_options,
+        datasets = {final_dataset}
 })
+
+print("Plot generated at my-composed-plot.png")
 
 </pre>
 
     <div class="figurecaption">
 </div>
-
-<figure id="autoid-15" class="figure ">
-<div class="center">
-
-<p>
-
-<a href="imgs/P8.ex.Plot4.png" target="_blank" ><img
-    src="imgs/P8.ex.Plot4.png"
-    style="
-    width:260pt;
-    "
-    class="inlineimage"
-    alt="(image)"
-></a>
-</p>
-
-
-<div class="figurecaption">
-Figure&nbsp;8: The resulting plot generated by fplot
-
-</div>
-
-</div>
-
-</figure>
 
 <p>
 <span
