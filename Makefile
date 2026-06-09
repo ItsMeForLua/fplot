@@ -91,38 +91,8 @@ lwarpmk:
 	@echo "Injecting custom structural CSS into lwarp.css..."
 	@echo "/* --- CUSTOM CODE BLOCK STRUCTURE --- */" >> tex/lwarp.css
 	@echo "pre.programlisting { background-color: #f0f0f0; border: 1.5pt solid black; padding: 10px; margin-bottom: 1.5em; overflow-x: auto; white-space: pre-wrap; font-family: monospace; }" >> tex/lwarp.css
-	@echo "Injecting Highlight.js into all HTML <head> tags..."
-	@for html_file in tex/*.html; \
-	do \
-		awk '/<\/head>/ { \
-			print "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/stackoverflow-light.min.css\">"; \
-			print "<style>.hljs { background: transparent !important; padding: 0 !important; }</style>"; \
-			print "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js\"></script>"; \
-			print "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lisp.min.js\"></script>"; \
-			print "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lua.min.js\"></script>"; \
-			print "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js\"></script>"; \
-			print "<script>"; \
-			print "document.addEventListener(\"DOMContentLoaded\", () => {"; \
-			print "  document.querySelectorAll(\"pre.programlisting\").forEach(el => {"; \
-			print "    const rawText = el.textContent;"; \
-			print "    const code = document.createElement(\"code\");"; \
-			print "    // Auto-detect Bash, Lua, or default to Lisp for Fennel"; \
-			print "    if (rawText.includes(\"git clone\") || rawText.includes(\"cd \") || rawText.includes(\"make \") || rawText.trim().startsWith(\"$$\")) {"; \
-			print "      code.className = \"language-bash\";"; \
-			print "    } else if (rawText.includes(\"function\") || rawText.includes(\"local \") || rawText.includes(\"require(\")) {"; \
-			print "      code.className = \"language-lua\";"; \
-			print "    } else {"; \
-			print "      code.className = \"language-lisp\";"; \
-			print "    }"; \
-			print "    code.textContent = rawText;"; \
-			print "    el.innerHTML = \"\";"; \
-			print "    el.appendChild(code);"; \
-			print "    hljs.highlightElement(code);"; \
-			print "  });"; \
-			print "});"; \
-			print "</script>"; \
-		} 1' "$$html_file" > "$$html_file.tmp" && mv "$$html_file.tmp" "$$html_file"; \
-	done
+	@echo "Cleaning up lwarp codeblocks and injecting static highlighting with texlua..."
+	@texlua --luaonly run_build_docs.lua tex
 
 limages:
 	@echo "Running lwarpmk limages for $(FILE)..."
@@ -137,14 +107,16 @@ find-html-deps:
 
 compile-tex:
 	@echo "Compiling $(FILE).tex into $(FILE).pdf (Pass 1: Draft)..."
-	@cd tex && lualatex -draftmode "$(FILE).tex" > /dev/null
+	@cd tex && lualatex -draftmode -interaction=nonstopmode -halt-on-error "$(FILE).tex" > /dev/null
 	@echo "Running Biber..."
 	@cd tex && biber "$(FILE)" > /dev/null
 	@echo "Compiling $(FILE).tex into $(FILE).pdf (Pass 2: Draft for TOC/Refs)..."
-	@cd tex && lualatex -draftmode "$(FILE).tex" > /dev/null
+	@cd tex && lualatex -draftmode -interaction=nonstopmode -halt-on-error "$(FILE).tex" > /dev/null
 	@echo "Compiling $(FILE).tex into $(FILE).pdf (Pass 3: Final PDF)..."
 	@cd tex && lualatex "$(FILE).tex"
-#
+
+build-sourcehut-tar:
+	@cd docs && tar -czf ../site.tar.gz .
 
 auto-run:
 	@test -n "$(FILE)" || (echo "Usage: make auto-run FILE=YourFile" >&2; exit 1)
@@ -155,7 +127,7 @@ auto-run:
 	@$(MAKE) docs FILE="$(FILE)"
 	@$(MAKE) clean-all-exclude-docs FILE="$(FILE)"
 	@rm -rf tex/docs 2>/dev/null || true
-	@rm -rf tex/imgs 2>/dev/null || true
+	@rm -f tex/imgs/lateximg-* 2>/dev/null || true
 	@rm $(FILE).pdf 2>/dev/null || true
 	@echo "FILE=$(FILE): completed."
 
